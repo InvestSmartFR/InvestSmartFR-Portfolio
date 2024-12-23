@@ -1,6 +1,5 @@
 import streamlit as st
 import requests
-import pandas as pd
 
 # Titre de l'application
 st.title("Simulateur de portefeuilles InvestSmart 🚀")
@@ -38,71 +37,53 @@ strategy = st.sidebar.selectbox(
     options=list(portfolio_options[portfolio_type].keys())
 )
 
-# Entrée pour le montant investi mensuellement
-monthly_investment = st.sidebar.number_input(
-    "Montant investi chaque mois (€)",
-    min_value=0, max_value=5000, value=250, step=50
-)
+# Récupération du script correspondant depuis GitHub
+script_name = portfolio_options[portfolio_type][strategy]
+script_url = f"{GITHUB_BASE_URL}{script_name}"
+st.sidebar.write(f"🗂️ Script sélectionné : `{script_name}`")
 
-# Entrée pour l'investissement initial
-initial_investment = st.sidebar.number_input(
-    "Investissement initial (€)",
-    min_value=0, max_value=100000, value=10000, step=1000
-)
+def download_script(script_url):
+    try:
+        response = requests.get(script_url)
+        response.raise_for_status()  # Vérifie les erreurs HTTP
+        return response.text
+    except requests.exceptions.RequestException as e:
+        st.error(f"❌ Erreur lors du téléchargement du script : {str(e)}")
+        return None
 
-# Vérification des conditions pour l'investissement
-if monthly_investment == 0 and initial_investment == 0:
-    st.error("❌ Vous devez saisir soit un investissement initial, soit un montant mensuel (DCA).")
+# Télécharger et exécuter le script Python correspondant
+script_content = download_script(script_url)
+
+if script_content:
+    exec_globals = {}
+    try:
+        exec(script_content, exec_globals)
+
+        # Vérifier si la fonction simulate_portfolio est définie
+        if "simulate_portfolio" in exec_globals:
+            simulate_portfolio = exec_globals["simulate_portfolio"]
+
+            # Appeler la fonction simulate_portfolio
+            results, df_combined = simulate_portfolio()
+
+            # Afficher les résultats
+            st.header("Résultats de la simulation 📊")
+            st.write(f"**Montant total investi :** {results['Montant total investi']}")
+            st.write(f"**Valeur finale :** {results['Valeur finale']}")
+            st.write(f"**Rendement cumulatif :** {results['Rendement cumulatif']}")
+            st.write(f"**Rendement annualisé :** {results['Rendement annualisé']}")
+
+            # Graphique de la performance
+            st.line_chart(data=df_combined.set_index('Date')['Portfolio_Value'])
+
+        else:
+            st.error(f"Le script `{script_name}` ne contient pas de fonction `simulate_portfolio`.")
+    except Exception as e:
+        st.error(f"❌ Une erreur est survenue lors de l'exécution du script : {str(e)}")
 else:
-    # Récupération du script correspondant depuis GitHub
-    script_name = portfolio_options[portfolio_type][strategy]
-    script_url = f"{GITHUB_BASE_URL}{script_name}"
-    st.sidebar.write(f"🗂️ Script sélectionné : `{script_name}`")
-
-    def download_script(script_url):
-        try:
-            response = requests.get(script_url)
-            response.raise_for_status()  # Vérifie les erreurs HTTP
-            return response.text
-        except requests.exceptions.RequestException as e:
-            st.error(f"❌ Erreur lors du téléchargement du script : {str(e)}")
-            return None
-
-    # Télécharger et exécuter le script Python correspondant
-    script_content = download_script(script_url)
-
-    if script_content:
-        exec_globals = {}
-        try:
-            exec(script_content, exec_globals)
-
-            # Vérifier si la fonction simulate_portfolio est définie
-            if "simulate_portfolio" in exec_globals:
-                simulate_portfolio = exec_globals["simulate_portfolio"]
-
-                # Appeler la fonction simulate_portfolio
-                results, df_combined = simulate_portfolio(
-                    monthly_investment=monthly_investment,
-                    initial_investment=initial_investment
-                )
-
-                # Afficher les résultats
-                st.header("Résultats de la simulation 📊")
-                st.write(f"**Montant total investi :** {results['Montant total investi']}")
-                st.write(f"**Valeur finale :** {results['Valeur finale']}")
-                st.write(f"**Rendement cumulatif :** {results['Rendement cumulatif']}")
-                st.write(f"**Rendement annualisé :** {results['Rendement annualisé']}")
-
-                # Graphique de la performance
-                st.line_chart(data=df_combined.set_index('Date')['Portfolio_Value'])
-
-            else:
-                st.error(f"Le script `{script_name}` ne contient pas de fonction `simulate_portfolio`.")
-        except Exception as e:
-            st.error(f"❌ Une erreur est survenue lors de l'exécution du script : {str(e)}")
-    else:
-        st.error("Impossible de récupérer le script sélectionné.")
+    st.error("Impossible de récupérer le script sélectionné.")
 
 # Indication pour éviter la page blanche
 st.sidebar.write("💡 Utilisez le menu pour configurer votre portefeuille.")
+
 
