@@ -42,13 +42,13 @@ strategy = st.sidebar.selectbox(
 # Entrée pour le montant investi mensuellement
 monthly_investment = st.sidebar.number_input(
     "Montant investi chaque mois (€)",
-    min_value=50, max_value=5000, value=250, step=50
+    min_value=0, max_value=5000, value=250, step=50
 )
 
 # Entrée pour l'investissement initial
 initial_investment = st.sidebar.number_input(
     "Investissement initial (€)",
-    min_value=1000, max_value=100000, value=10000, step=1000
+    min_value=0, max_value=100000, value=10000, step=1000
 )
 
 # Récupération du script correspondant depuis GitHub
