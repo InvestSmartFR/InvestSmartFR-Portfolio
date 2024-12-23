@@ -111,13 +111,15 @@ def simulate_portfolio(monthly_investment):
     # Simuler le DCA
     portfolio_dca, total_invested = simulate_dca(df_combined, monthly_investment)
 
-    # Vérifier les résultats
-    if not portfolio_dca or not total_invested:
-        raise ValueError("Erreur lors de la simulation DCA. Aucune donnée générée.")
-
     # Ajouter les résultats au DataFrame
     df_combined['Portfolio_DCA'] = portfolio_dca
 
     # Retourner les résultats et le DataFrame
     return df_combined, total_invested
+
+# Exemple d'utilisation
+df, invested = simulate_portfolio(100)  # Investissement mensuel de 100 €
+print(f"Montant total investi : {invested} €")
+print(df.head())
+
 
