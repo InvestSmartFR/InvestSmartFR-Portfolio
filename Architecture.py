@@ -1,7 +1,6 @@
 import streamlit as st
 import requests
 import pandas as pd
-import numpy as np
 
 # Titre de l'application
 st.title("Simulateur de portefeuilles InvestSmart 🚀")
