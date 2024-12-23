@@ -1,7 +1,7 @@
 import streamlit as st
 import importlib.util
 import os
-import requests
+import subprocess
 
 # Titre de l'application
 st.title("Simulateur de portefeuilles InvestSmart 🚀")
@@ -23,8 +23,19 @@ portfolio_options = {
     }
 }
 
-# Définir le dépôt GitHub
-GITHUB_BASE_URL = "https://raw.githubusercontent.com/InvestSmartFR/InvestSmartFR-Portfolio/DCA/"
+# Définir la branche Git correspondante pour les simulations
+branch_name = "DCA"
+
+# Fonction pour changer de branche dans Git
+def switch_git_branch(branch):
+    try:
+        subprocess.run(["git", "checkout", branch], check=True)
+        st.sidebar.write(f"✅ Branche Git active : {branch}")
+    except subprocess.CalledProcessError as e:
+        st.sidebar.error(f"❌ Erreur lors du changement de branche : {str(e)}")
+
+# Changer vers la branche DCA
+switch_git_branch(branch_name)
 
 # Menu déroulant pour sélectionner le type de portefeuille
 st.sidebar.header("Sélectionnez votre portefeuille")
@@ -45,57 +56,50 @@ monthly_investment = st.sidebar.number_input(
     min_value=50, max_value=5000, value=250, step=50
 )
 
+# Entrée pour l'investissement initial
+initial_investment = st.sidebar.number_input(
+    "Investissement initial (€)",
+    min_value=1000, max_value=100000, value=10000, step=1000
+)
+
 # Déterminer le fichier Python correspondant
 selected_script = portfolio_options[portfolio_type][strategy]
-script_filename = f"{selected_script}.py"
-script_url = f"{GITHUB_BASE_URL}{script_filename}"
 
-st.sidebar.write(f"🗂️ Script sélectionné : `{script_filename}`")
+st.sidebar.write(f"🗂️ Script sélectionné : {selected_script}.py")
 
-# Fonction pour télécharger un fichier depuis GitHub
-def download_script_from_github(url, local_path):
-    try:
-        response = requests.get(url)
-        response.raise_for_status()  # Vérifie les erreurs HTTP
-        with open(local_path, 'w', encoding='utf-8') as f:
-            f.write(response.text)
-        return True
-    except requests.exceptions.RequestException as e:
-        st.error(f"❌ Erreur lors du téléchargement du fichier : {str(e)}")
-        return False
-
-# Vérifier si le fichier existe localement ou le télécharger
-local_script_path = os.path.join(os.getcwd(), script_filename)
-if not os.path.exists(local_script_path):
-    st.sidebar.write(f"Téléchargement de `{script_filename}` depuis GitHub...")
-    if not download_script_from_github(script_url, local_script_path):
-        st.stop()
-
-# Charger et exécuter le script correspondant
+# Essayer de charger et exécuter le script correspondant
 try:
-    # Charger dynamiquement le module Python depuis le chemin
-    spec = importlib.util.spec_from_file_location("portfolio_module", local_script_path)
-    portfolio_module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(portfolio_module)
-
-    # Vérifier si la fonction simulate_dca existe
-    if hasattr(portfolio_module, "simulate_dca"):
-        # Appeler la fonction simulate_dca avec le montant investi
-        results, df_combined = portfolio_module.simulate_dca(monthly_investment=monthly_investment)
-
-        # Afficher les résultats dans l'application Streamlit
-        st.header("Résultats de la simulation 📊")
-        st.write(f"**Montant total investi :** {results['Montant total investi']}")
-        st.write(f"**Valeur finale :** {results['Valeur finale']}")
-        st.write(f"**Rendement cumulatif :** {results['Rendement cumulatif']}")
-        st.write(f"**Rendement annualisé :** {results['Rendement annualisé']}")
-
-        # Graphique d'évolution du portefeuille
-        st.line_chart(data=df_combined.set_index('Date')['Portfolio_DCA'])
+    # Vérifier si le fichier Python existe dans le répertoire
+    script_path = os.path.join(os.getcwd(), f"{selected_script}.py")
+    if not os.path.exists(script_path):
+        st.error(f"Le fichier {selected_script}.py est introuvable. Assurez-vous qu'il est dans la branche {branch_name}.")
     else:
-        st.error(f"Le fichier `{script_filename}` ne contient pas de fonction `simulate_dca`.")
+        # Charger dynamiquement le module Python depuis le chemin
+        spec = importlib.util.spec_from_file_location("portfolio_module", script_path)
+        portfolio_module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(portfolio_module)
+
+        # Vérifier si la fonction simulate_portfolio existe
+        if hasattr(portfolio_module, "simulate_portfolio"):
+            # Appeler la fonction simulate_portfolio avec les paramètres
+            results, df_combined = portfolio_module.simulate_portfolio(
+                monthly_investment=monthly_investment,
+                initial_investment=initial_investment
+            )
+
+            # Afficher les résultats dans l'application Streamlit
+            st.header("Résultats de la simulation 📊")
+            st.write(f"**Montant total investi :** {results['Montant total investi']}")
+            st.write(f"**Valeur finale :** {results['Valeur finale']}")
+            st.write(f"**Rendement cumulatif :** {results['Rendement cumulatif']}")
+            st.write(f"**Rendement annualisé :** {results['Rendement annualisé']}")
+
+            # Graphique d'évolution du portefeuille
+            st.line_chart(data=df_combined.set_index('Date')['Portfolio_Value'])
+        else:
+            st.error(f"Le fichier {selected_script}.py ne contient pas de fonction `simulate_portfolio`.")
 except Exception as e:
-    st.error(f"❌ Une erreur est survenue : {str(e)}")
+    st.error(f"Une erreur est survenue : {str(e)}")
 
 # Indication pour éviter la page blanche
 st.sidebar.write("💡 Utilisez le menu pour configurer votre portefeuille.")
