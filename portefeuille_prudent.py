@@ -38,18 +38,23 @@ def calculate_portfolio_value(df, weights, initial_investment):
 def simulate_dca(df, monthly_investment):
     """
     Simule un investissement mensuel (DCA).
+    Retourne une liste des valeurs du portefeuille et une liste des capitaux investis cumulés.
     """
-    portfolio_value = []
-    total_capital = 0
-    capital_cumulative = []
+    portfolio_values = []  # Valeurs du portefeuille
+    capital_cumulative = []  # Capital investi cumulatif
+    total_capital = 0  # Capital total investi
 
     for i, row in df.iterrows():
-        if i % 21 == 0 and i != 0:  # Approximation : 21 jours ouvrés par mois
+        # Simuler un versement tous les 21 jours (environ un mois)
+        if i % 21 == 0 and i != 0:
             total_capital += monthly_investment
-        capital_cumulative.append(total_capital)
-        portfolio_value.append(row['Portfolio_Value'] * (total_capital / 10000))
 
-    return portfolio_value, capital_cumulative
+        capital_cumulative.append(total_capital)
+        # Valeur actuelle du portefeuille en fonction du capital investi
+        portfolio_value = row['Portfolio_Value'] * (total_capital / 10000)
+        portfolio_values.append(portfolio_value)
+
+    return portfolio_values, capital_cumulative
 
 def simulate_portfolio(monthly_investment):
     """
