@@ -1,14 +1,31 @@
-def simulate_portfolio(initial_investment=0, monthly_investment=0, start_date="2017-10-09"):
+import os
+import pandas as pd
+import numpy as np
+
+def rename_files_in_directory(directory):
+    """
+    Renomme les fichiers dans le répertoire donné en remplaçant les espaces par des underscores.
+    """
+    for filename in os.listdir(directory):
+        if " " in filename:  # Vérifie si le nom contient des espaces
+            new_name = filename.replace(" ", "_")
+            os.rename(os.path.join(directory, filename), os.path.join(directory, new_name))
+            print(f"Renommé : {filename} -> {new_name}")
+
+def simulate_portfolio(initial_investment=0, monthly_investment=0, start_date="2017-10-09", data_directory="."):
     """
     Simule l'évolution d'un portefeuille basé sur un investissement initial et un DCA (Dollar Cost Averaging).
     """
-    # Chemins locaux des fichiers
+    # Renommer les fichiers dans le répertoire des données
+    rename_files_in_directory(data_directory)
+
+    # Chemins locaux des fichiers (après renommage)
     files = {
-        "US Treasury Bond": "Us Treasury Bond 3-7Y.xlsx",
-        "US Short Duration": "Short duration USD Corp.xlsx",
-        "S&P 500": "IShares Core SP500.xlsx",
-        "Nasdaq": "AMUNDI NASDAQ.xlsx",
-        "Small Cap": "S&P SmallCap 600.xlsx",
+        "US Treasury Bond": "Us_Treasury_Bond_3-7Y.xlsx",
+        "US Short Duration": "Short_Duration_USD_Corp.xlsx",
+        "S&P 500": "IShares_Core_SP500.xlsx",
+        "Nasdaq": "AMUNDI_NASDAQ.xlsx",
+        "Small Cap": "SP_SmallCap_600.xlsx",
     }
 
     fees = {
@@ -35,7 +52,8 @@ def simulate_portfolio(initial_investment=0, monthly_investment=0, start_date="2
     # Charger et prétraiter les fichiers
     dfs = []
     for name, file in files.items():
-        dfs.append(preprocess_data(file, f"VL_{name.replace(' ', '_')}", start_date, fees[name]))
+        filepath = os.path.join(data_directory, file)
+        dfs.append(preprocess_data(filepath, f"VL_{name.replace(' ', '_')}", start_date, fees[name]))
 
     # Fusionner les données sur les dates
     df_combined = dfs[0]
@@ -87,4 +105,3 @@ def simulate_portfolio(initial_investment=0, monthly_investment=0, start_date="2
     }
 
     return performance, df_combined
-
