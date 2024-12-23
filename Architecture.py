@@ -8,7 +8,6 @@ st.title("Simulateur de portefeuilles InvestSmart 🚀")
 # Options pour les portefeuilles et stratégies
 portfolio_options = {
     "100% US": {
-        "Prudent": "portefeuille_prudent",
         "Pondéré": "portefeuille_pondéré_USD",
         "Dynamique": "portefeuille_dynamique_USD"
     },
@@ -18,7 +17,6 @@ portfolio_options = {
         "Dynamique": "portefeuille_dynamique_EUR"
     },
     "Mixte": {
-        "Prudent": "portefeuille_prudent",
         "Pondéré": "portefeuille_pondéré_MIXTE",
         "Dynamique": "portefeuille_dynamique_MIXTE"
     }
@@ -61,7 +59,17 @@ try:
         # Vérifier si la fonction simulate_portfolio existe
         if hasattr(portfolio_module, "simulate_portfolio"):
             # Appeler la fonction simulate_portfolio avec le montant investi
-            portfolio_module.simulate_portfolio(monthly_investment)
+            results, df_combined = portfolio_module.simulate_portfolio(monthly_investment)
+
+            # Afficher les résultats dans l'application Streamlit
+            st.header("Résultats de la simulation 📊")
+            st.write(f"**Montant total investi :** {results['Montant total investi']}")
+            st.write(f"**Valeur finale :** {results['Valeur finale']}")
+            st.write(f"**Rendement cumulatif :** {results['Rendement cumulatif']}")
+            st.write(f"**Rendement annualisé :** {results['Rendement annualisé']}")
+
+            # Graphique d'évolution du portefeuille
+            st.line_chart(data=df_combined[['Date', 'Portfolio_DCA']].set_index('Date'))
         else:
             st.error(f"Le fichier `{selected_script}.py` ne contient pas de fonction `simulate_portfolio`.")
 except Exception as e:
