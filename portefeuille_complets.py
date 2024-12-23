@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Portefeuille complets - Simulation réaliste avec DCA"""
+"""Portefeuille complets - Simulation réaliste avec DCA dans Streamlit"""
 
 import os
 import pandas as pd
