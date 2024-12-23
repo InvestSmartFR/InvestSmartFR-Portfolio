@@ -121,5 +121,3 @@ def simulate_portfolio(monthly_investment):
 df, invested = simulate_portfolio(100)  # Investissement mensuel de 100 €
 print(f"Montant total investi : {invested} €")
 print(df.head())
-
-
