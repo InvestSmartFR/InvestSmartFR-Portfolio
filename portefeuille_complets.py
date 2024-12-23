@@ -85,7 +85,7 @@ def apply_fees(df, frais):
 
 df_combined = apply_fees(df_combined, frais)
 
-# Pondérations des portefeuilles (exemple : Dynamique)
+# Pondérations des portefeuilles
 weights = {
     "Euro Gov Bond": 0.225,
     "Euro STOXX 50": 0.20,
@@ -122,7 +122,7 @@ def simulate_dca(df, monthly_investment, annual_return):
             portfolio_value += monthly_investment
 
         # Appliquer le rendement mensuel
-        portfolio_value *= (1 + monthly_return)
+        portfolio_value = portfolio_value * (1 + monthly_return)
         portfolio_values.append(portfolio_value)
 
     return portfolio_values, total_invested
@@ -148,3 +148,4 @@ ax.set_xlabel("Date")
 ax.set_ylabel("Valeur (€)")
 ax.legend()
 st.pyplot(fig)
+
