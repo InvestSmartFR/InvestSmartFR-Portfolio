@@ -87,3 +87,4 @@ def simulate_portfolio(initial_investment=0, monthly_investment=0, start_date="2
     }
 
     return performance, df_combined
+
