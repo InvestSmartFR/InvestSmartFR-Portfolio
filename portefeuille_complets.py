@@ -105,8 +105,8 @@ def calculate_portfolio_value(df, weights):
 
 df_combined['Portfolio_Value'] = calculate_portfolio_value(df_combined, weights)
 
-# Simulation d'investissement mensuel (DCA) - Correction
-def simulate_dca_fixed(df, monthly_investment, annual_return):
+# Simulation d'investissement mensuel (DCA) - Corrected
+def simulate_dca(df, monthly_investment, annual_return):
     """
     Simule DCA (Dollar Cost Averaging) avec contributions mensuelles et rendement annuel.
     """
@@ -129,8 +129,8 @@ def simulate_dca_fixed(df, monthly_investment, annual_return):
 
 # Choix du montant mensuel
 monthly_investment = st.selectbox("Montant investi chaque mois (€)", [100, 250, 500, 750])
-annual_return = st.slider("Rendement annuel (%)", 1.0, 10.0, 5.0)
-portfolio_dca, total_invested = simulate_dca_fixed(df_combined, monthly_investment, annual_return)
+annual_return = st.slider("Rendement annuel (%)", 1.0, 10.0, 8.3)  # Adjust default to 8.3%
+portfolio_dca, total_invested = simulate_dca(df_combined, monthly_investment, annual_return)
 
 # Ajouter au DataFrame
 df_combined['Portfolio_DCA'] = portfolio_dca
@@ -148,4 +148,3 @@ ax.set_xlabel("Date")
 ax.set_ylabel("Valeur (€)")
 ax.legend()
 st.pyplot(fig)
-
