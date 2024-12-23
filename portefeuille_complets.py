@@ -105,45 +105,34 @@ def calculate_portfolio_value(df, weights):
 
 df_combined['Portfolio_Value'] = calculate_portfolio_value(df_combined, weights)
 
-# Simulation d'investissement mensuel (DCA) - Correction ajoutée
-def simulate_dca_fixed(df, monthly_investment, annual_return):
-    """
-    Simule DCA (Dollar Cost Averaging) avec contributions mensuelles et rendement annuel.
-    """
-    portfolio_values = []
+# Simulation d'investissement mensuel (DCA)
+def simulate_dca(df, monthly_investment):
+    """Simule des investissements mensuels sur la durée des données"""
+    portfolio_value = []
     total_invested = 0
-    monthly_return = (1 + annual_return / 100) ** (1 / 12) - 1  # Rendement mensuel
-
-    portfolio_value = 0  # Valeur initiale du portefeuille
 
     for i, row in df.iterrows():
-        # Ajouter des contributions tous les 21 jours (environ un mois de trading)
-        if i % 21 == 0:
+        if i % 21 == 0:  # Approximation : un investissement par mois
             total_invested += monthly_investment
-            portfolio_value += monthly_investment
+        portfolio_value.append(row['Portfolio_Value'] * (total_invested / 10000))
 
-        # Appliquer le rendement mensuel
-        portfolio_value *= (1 + monthly_return)
-        portfolio_values.append(portfolio_value)
-
-    return portfolio_values, total_invested
+    return portfolio_value, total_invested
 
 # Choix du montant mensuel
 monthly_investment = st.selectbox("Montant investi chaque mois (€)", [100, 250, 500, 750])
-annual_return = st.slider("Rendement annuel (%)", 1.0, 10.0, 5.0)
-portfolio_dca, total_invested = simulate_dca_fixed(df_combined, monthly_investment, annual_return)
+portfolio_dca, total_invested = simulate_dca(df_combined, monthly_investment)
 
 # Ajouter au DataFrame
 df_combined['Portfolio_DCA'] = portfolio_dca
 
 # Afficher les résultats
 st.header("Simulation d'investissement 📊")
-st.write(f"Montant total investi : {total_invested:,.2f} €")
-st.write(f"Valeur finale du portefeuille : {portfolio_dca[-1]:,.2f} €")
+st.write(f"Montant total investi : {total_invested} €")
+st.write(f"Valeur finale du portefeuille : {df_combined['Portfolio_DCA'].iloc[-1]:,.2f} €")
 
 # Visualisation
 fig, ax = plt.subplots()
-ax.plot(df_combined['Date'], portfolio_dca, label="Valeur du portefeuille (DCA)")
+ax.plot(df_combined['Date'], df_combined['Portfolio_DCA'], label="Valeur du portefeuille (DCA)")
 ax.set_title(f"Évolution du portefeuille avec DCA ({monthly_investment}€/mois)")
 ax.set_xlabel("Date")
 ax.set_ylabel("Valeur (€)")
