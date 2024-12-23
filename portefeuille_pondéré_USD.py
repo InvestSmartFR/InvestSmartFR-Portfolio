@@ -1,12 +1,8 @@
-import pandas as pd
-import numpy as np
-
 def simulate_portfolio(initial_investment=0, monthly_investment=0, start_date="2017-10-09"):
     """
     Simule l'évolution d'un portefeuille basé sur un investissement initial et un DCA (Dollar Cost Averaging).
     """
-    # URL des fichiers sur GitHub
-    GITHUB_BASE_URL = "https://raw.githubusercontent.com/InvestSmartFR/InvestSmartFR-Portfolio/Configuration/"
+    # Chemins locaux des fichiers
     files = {
         "US Treasury Bond": "Us Treasury Bond 3-7Y.xlsx",
         "US Short Duration": "Short duration USD Corp.xlsx",
@@ -23,11 +19,11 @@ def simulate_portfolio(initial_investment=0, monthly_investment=0, start_date="2
         "Small Cap": 0.0014,
     }
 
-    def preprocess_data(url, column_name, start_date, fee_rate):
+    def preprocess_data(filepath, column_name, start_date, fee_rate):
         """
         Prépare les données : format datetime, trie par date croissante, limite à start_date, applique les frais courants.
         """
-        df = pd.read_excel(url)
+        df = pd.read_excel(filepath)  # Chargement depuis un fichier local
         df['Date'] = pd.to_datetime(df['Date'], errors='coerce', dayfirst=True)
         df = df.dropna(subset=['Date']).sort_values(by='Date', ascending=True).reset_index(drop=True)
         df = df[df['Date'] >= pd.to_datetime(start_date)]
@@ -39,8 +35,7 @@ def simulate_portfolio(initial_investment=0, monthly_investment=0, start_date="2
     # Charger et prétraiter les fichiers
     dfs = []
     for name, file in files.items():
-        url = f"{GITHUB_BASE_URL}{file}"
-        dfs.append(preprocess_data(url, f"VL_{name.replace(' ', '_')}", start_date, fees[name]))
+        dfs.append(preprocess_data(file, f"VL_{name.replace(' ', '_')}", start_date, fees[name]))
 
     # Fusionner les données sur les dates
     df_combined = dfs[0]
@@ -50,7 +45,7 @@ def simulate_portfolio(initial_investment=0, monthly_investment=0, start_date="2
     df_combined = df_combined.sort_values(by='Date', ascending=True).reset_index(drop=True)
     df_combined.iloc[:, 1:] = df_combined.iloc[:, 1:].interpolate(method='linear', axis=0).ffill().bfill()
 
-    # Pondérations par défaut (modifiable dans l'interface)
+    # Pondérations par défaut
     weights = {
         'VL_US_Treasury_Bond': 0.30,
         'VL_US_Short_Duration': 0.20,
@@ -69,7 +64,7 @@ def simulate_portfolio(initial_investment=0, monthly_investment=0, start_date="2
     total_invested = initial_investment
 
     for i, row in df_combined.iterrows():
-        if i % 21 == 0 and i != 0:  # Simulation des investissements mensuels (approximatif)
+        if i % 21 == 0 and i != 0:  # Simulation des investissements mensuels
             total_invested += monthly_investment
             cumulative_capital += monthly_investment
 
