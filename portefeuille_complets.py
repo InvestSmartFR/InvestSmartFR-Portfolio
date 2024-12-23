@@ -85,7 +85,7 @@ def apply_fees(df, frais):
 
 df_combined = apply_fees(df_combined, frais)
 
-# Pondérations des portefeuilles
+# Pondérations des portefeuilles (exemple : Dynamique)
 weights = {
     "Euro Gov Bond": 0.225,
     "Euro STOXX 50": 0.20,
@@ -105,15 +105,16 @@ def calculate_portfolio_value(df, weights):
 
 df_combined['Portfolio_Value'] = calculate_portfolio_value(df_combined, weights)
 
-# Simulation d'investissement mensuel (DCA) - Corrected
-def simulate_dca(df, monthly_investment, annual_return):
+# Simulation d'investissement mensuel (DCA) - Correction ajoutée
+def simulate_dca_fixed(df, monthly_investment, annual_return):
     """
     Simule DCA (Dollar Cost Averaging) avec contributions mensuelles et rendement annuel.
     """
     portfolio_values = []
     total_invested = 0
-    portfolio_value = 0
     monthly_return = (1 + annual_return / 100) ** (1 / 12) - 1  # Rendement mensuel
+
+    portfolio_value = 0  # Valeur initiale du portefeuille
 
     for i, row in df.iterrows():
         # Ajouter des contributions tous les 21 jours (environ un mois de trading)
@@ -122,15 +123,15 @@ def simulate_dca(df, monthly_investment, annual_return):
             portfolio_value += monthly_investment
 
         # Appliquer le rendement mensuel
-        portfolio_value = portfolio_value * (1 + monthly_return)
+        portfolio_value *= (1 + monthly_return)
         portfolio_values.append(portfolio_value)
 
     return portfolio_values, total_invested
 
 # Choix du montant mensuel
 monthly_investment = st.selectbox("Montant investi chaque mois (€)", [100, 250, 500, 750])
-annual_return = st.slider("Rendement annuel (%)", 1.0, 10.0, 8.3)  # Adjust default to 8.3%
-portfolio_dca, total_invested = simulate_dca(df_combined, monthly_investment, annual_return)
+annual_return = st.slider("Rendement annuel (%)", 1.0, 10.0, 5.0)
+portfolio_dca, total_invested = simulate_dca_fixed(df_combined, monthly_investment, annual_return)
 
 # Ajouter au DataFrame
 df_combined['Portfolio_DCA'] = portfolio_dca
