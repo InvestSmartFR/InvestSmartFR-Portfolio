@@ -5,71 +5,91 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
+def preprocess_data(df, column_name, start_date):
+    """
+    Prépare les données : format datetime, trie par date croissante et limite à start_date.
+    """
+    df['Date'] = pd.to_datetime(df['Date'], errors='coerce', dayfirst=True)
+    df = df.dropna(subset=['Date']).sort_values(by='Date', ascending=True).reset_index(drop=True)
+    df = df[df['Date'] >= start_date]  # Filtrer à partir de start_date
+    df.rename(columns={'NAV': column_name}, inplace=True)
+    return df
+
+def apply_fees(df, frais):
+    """
+    Ajuste les VL pour prendre en compte les frais courants (journaliers).
+    """
+    days_in_year = 365.25
+    for col, fee in frais.items():
+        if col in df.columns:
+            daily_fee = (1 - fee / 100) ** (1 / days_in_year)
+            df[col] *= daily_fee ** np.arange(len(df))
+    return df
+
+def calculate_portfolio_value(df, weights, initial_investment):
+    """
+    Calcule la valeur totale du portefeuille en pondérant les VL par leurs poids.
+    """
+    portfolio_value = sum(
+        weights[col] * df[col] / df[col].iloc[0] for col in weights
+    ) * initial_investment
+    return portfolio_value
+
+def simulate_dca(df, monthly_investment):
+    """
+    Simule un investissement mensuel (DCA).
+    """
+    portfolio_value = []
+    total_capital = 0
+    capital_cumulative = []
+
+    for i, row in df.iterrows():
+        if i % 21 == 0 and i != 0:  # Approximation : 21 jours ouvrés par mois
+            total_capital += monthly_investment
+        capital_cumulative.append(total_capital)
+        portfolio_value.append(row['Portfolio_Value'] * (total_capital / 10000))
+
+    return portfolio_value, capital_cumulative
+
 def simulate_portfolio(monthly_investment):
     """
     Simule le portefeuille prudent avec un investissement initial et/ou mensuel (DCA).
     :param monthly_investment: Montant investi chaque mois (€).
-    :return: Tuple contenant le DataFrame combiné et les résultats DCA.
     """
 
     # Charger les fichiers
-    df_gov_bond = pd.read_excel("Historique VL Euro Gov Bond.xlsx")
-    df_stoxx50 = pd.read_excel("HistoricalData EuroStoxx 50.xlsx")
-    df_pimco = pd.read_excel("PIMCO Euro Short-Term High Yield Corporate Bond Index UCITS ETF.xlsx")
+    files = {
+        "Euro Gov Bond": "Historique VL Euro Gov Bond.xlsx",
+        "Euro STOXX 50": "HistoricalData EuroStoxx 50.xlsx",
+        "PIMCO Euro Short": "PIMCO Euro Short-Term High Yield Corporate Bond Index UCITS ETF.xlsx"
+    }
+    df_gov_bond = pd.read_excel(files["Euro Gov Bond"])
+    df_stoxx50 = pd.read_excel(files["Euro STOXX 50"])
+    df_pimco = pd.read_excel(files["PIMCO Euro Short"])
 
-    # Convertir les colonnes de dates au format datetime
-    df_gov_bond['Date'] = pd.to_datetime(df_gov_bond['Date'], errors='coerce', dayfirst=True)
-    df_stoxx50['Date'] = pd.to_datetime(df_stoxx50['Date'], errors='coerce', dayfirst=True)
-    df_pimco['Date'] = pd.to_datetime(df_pimco['Date'], errors='coerce', dayfirst=True)
-
-    # Supprimer les lignes avec des dates invalides
-    df_gov_bond = df_gov_bond.dropna(subset=['Date'])
-    df_stoxx50 = df_stoxx50.dropna(subset=['Date'])
-    df_pimco = df_pimco.dropna(subset=['Date'])
-
-    # Renommer les colonnes de valeur liquidative
-    df_gov_bond.rename(columns={'NAV': 'VL_Gov_Bond'}, inplace=True)
-    df_stoxx50.rename(columns={'NAV': 'VL_Stoxx50'}, inplace=True)
-    df_pimco.rename(columns={'NAV': 'VL_PIMCO_Short_Term'}, inplace=True)
-
-    # Trier les fichiers par ordre chronologique
+    # Prétraiter les données
     start_date = pd.to_datetime("2017-10-09")
-    df_gov_bond = df_gov_bond[df_gov_bond['Date'] >= start_date].sort_values(by='Date', ascending=True).reset_index(drop=True)
-    df_stoxx50 = df_stoxx50[df_stoxx50['Date'] >= start_date].sort_values(by='Date', ascending=True).reset_index(drop=True)
-    df_pimco = df_pimco[df_pimco['Date'] >= start_date].sort_values(by='Date', ascending=True).reset_index(drop=True)
+    df_gov_bond = preprocess_data(df_gov_bond, 'VL_Gov_Bond', start_date)
+    df_stoxx50 = preprocess_data(df_stoxx50, 'VL_Stoxx50', start_date)
+    df_pimco = preprocess_data(df_pimco, 'VL_PIMCO_Short_Term', start_date)
 
-    # Fusionner les DataFrames sur la colonne 'Date'
-    df_combined = pd.merge(df_gov_bond[['Date', 'VL_Gov_Bond']],
-                           df_stoxx50[['Date', 'VL_Stoxx50']],
-                           on='Date', how='outer')
+    # Fusionner les DataFrames sur la base des dates
+    dfs = [df_gov_bond, df_stoxx50, df_pimco]
+    df_combined = dfs[0]
+    for df in dfs[1:]:
+        df_combined = pd.merge(df_combined, df[['Date', df.columns[-1]]], on='Date', how='outer')
 
-    df_combined = pd.merge(df_combined,
-                           df_pimco[['Date', 'VL_PIMCO_Short_Term']],
-                           on='Date', how='outer').sort_values(by='Date', ascending=True).reset_index(drop=True)
-
-    # Interpolation pour combler les valeurs manquantes
+    # Trier les dates et interpoler les valeurs manquantes
+    df_combined = df_combined.sort_values(by='Date', ascending=True).reset_index(drop=True)
     numeric_cols = df_combined.select_dtypes(include=[np.number]).columns
     df_combined[numeric_cols] = df_combined[numeric_cols].interpolate(method='linear', axis=0)
 
-    # Frais courants (exprimés en pourcentage annuel)
+    # Frais courants (en pourcentage annuel)
     frais = {
         'VL_Gov_Bond': 0.15,
         'VL_Stoxx50': 0.09,
         'VL_PIMCO_Short_Term': 0.50
     }
-
-    # Appliquer les frais sur les VL
-    def apply_fees(df, frais):
-        """
-        Ajuste les VL pour prendre en compte les frais courants.
-        """
-        days_in_year = 365.25
-        for col, fee in frais.items():
-            if col in df.columns:
-                daily_fee = (1 - fee / 100) ** (1 / days_in_year)
-                df[col] = df[col] * (daily_fee ** np.arange(len(df)))
-        return df
-
     df_combined = apply_fees(df_combined, frais)
 
     # Poids du portefeuille
@@ -79,45 +99,34 @@ def simulate_portfolio(monthly_investment):
         'VL_PIMCO_Short_Term': 0.20
     }
 
-    # Calculer la valeur du portefeuille
-    def calculate_portfolio_value(df, weights):
-        """
-        Calcule la valeur totale du portefeuille.
-        """
-        df['Portfolio_Value'] = (
-            weights['VL_Gov_Bond'] * df['VL_Gov_Bond'] / df['VL_Gov_Bond'].iloc[0] +
-            weights['VL_Stoxx50'] * df['VL_Stoxx50'] / df['VL_Stoxx50'].iloc[0] +
-            weights['VL_PIMCO_Short_Term'] * df['VL_PIMCO_Short_Term'] / df['VL_PIMCO_Short_Term'].iloc[0]
-        ) * 100  # Base initiale
-        return df
+    # Calculer la valeur initiale du portefeuille
+    initial_investment = 10000
+    df_combined['Portfolio_Value'] = calculate_portfolio_value(df_combined, weights, initial_investment)
 
-    df_combined = calculate_portfolio_value(df_combined, weights)
+    # Simulation DCA
+    portfolio_dca, capital_cumulative = simulate_dca(df_combined, monthly_investment)
 
-    # Simulation d'investissement mensuel
-    def simulate_dca(df, monthly_investment):
-        """
-        Simule un investissement mensuel (DCA).
-        """
-        portfolio_value = []
-        total_invested = 0
-
-        for i, row in df.iterrows():
-            if i % 21 == 0:  # Approximation : un mois (21 jours ouvrés)
-                total_invested += monthly_investment
-            portfolio_value.append(row['Portfolio_Value'] * (total_invested / 100))
-
-        return portfolio_value, total_invested
-
-    # Simuler le DCA
-    portfolio_dca, total_invested = simulate_dca(df_combined, monthly_investment)
-
-    # Ajouter les résultats au DataFrame
+    # Ajouter les colonnes au DataFrame
     df_combined['Portfolio_DCA'] = portfolio_dca
+    df_combined['Capital_Cumulative'] = capital_cumulative
 
-    # Retourner les résultats et le DataFrame
-    return df_combined, total_invested
+    # Retourner le DataFrame complet
+    return df_combined
 
 # Exemple d'utilisation
-df, invested = simulate_portfolio(100)  # Investissement mensuel de 100 €
-print(f"Montant total investi : {invested} €")
-print(df.head())
+monthly_investment = 100
+df_combined = simulate_portfolio(monthly_investment)
+
+# Afficher les 5 premières lignes pour vérification
+print(df_combined.head())
+
+# Visualisation de la courbe de valeur du portefeuille
+plt.figure(figsize=(12, 6))
+plt.plot(df_combined['Date'], df_combined['Portfolio_DCA'], label="Portefeuille DCA")
+plt.plot(df_combined['Date'], df_combined['Capital_Cumulative'], label="Capital Investi")
+plt.title(f"Évolution du portefeuille avec DCA ({monthly_investment} €/mois)")
+plt.xlabel("Date")
+plt.ylabel("Valeur (€)")
+plt.legend()
+plt.grid()
+plt.show()
