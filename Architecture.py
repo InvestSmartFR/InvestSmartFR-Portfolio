@@ -1,5 +1,5 @@
 import streamlit as st
-import importlib
+import importlib.util
 import os
 
 # Titre de l'application
@@ -8,17 +8,17 @@ st.title("Simulateur de portefeuilles InvestSmart 🚀")
 # Options pour les portefeuilles et stratégies
 portfolio_options = {
     "100% US": {
-        "Pondéré": "portefeuille_pondéré_USD",
-        "Dynamique": "portefeuille_dynamique_USD"
+        "Pondéré": "DCA/portefeuille_pondéré_USD",
+        "Dynamique": "DCA/portefeuille_dynamique_USD"
     },
     "100% Europe": {
-        "Prudent": "portefeuille_prudent",
-        "Pondéré": "portefeuille_pondéré_EUR",
-        "Dynamique": "portefeuille_dynamique_EUR"
+        "Prudent": "DCA/portefeuille_prudent",
+        "Pondéré": "DCA/portefeuille_pondéré_EUR",
+        "Dynamique": "DCA/portefeuille_dynamique_EUR"
     },
     "Mixte": {
-        "Pondéré": "portefeuille_pondéré_MIXTE",
-        "Dynamique": "portefeuille_dynamique_MIXTE"
+        "Pondéré": "DCA/portefeuille_pondéré_MIXTE",
+        "Dynamique": "DCA/portefeuille_dynamique_MIXTE"
     }
 }
 
@@ -51,10 +51,12 @@ try:
     # Vérifier si le fichier Python existe dans le répertoire
     script_path = os.path.join(os.getcwd(), f"{selected_script}.py")
     if not os.path.exists(script_path):
-        st.error(f"Le fichier `{selected_script}.py` est introuvable. Assurez-vous qu'il est dans le bon répertoire.")
+        st.error(f"Le fichier `{selected_script}.py` est introuvable. Assurez-vous qu'il est dans le répertoire `DCA`.")
     else:
-        # Importer dynamiquement le module
-        portfolio_module = importlib.import_module(selected_script)
+        # Charger dynamiquement le module Python depuis le chemin
+        spec = importlib.util.spec_from_file_location("portfolio_module", script_path)
+        portfolio_module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(portfolio_module)
 
         # Vérifier si la fonction simulate_portfolio existe
         if hasattr(portfolio_module, "simulate_portfolio"):
@@ -69,7 +71,7 @@ try:
             st.write(f"**Rendement annualisé :** {results['Rendement annualisé']}")
 
             # Graphique d'évolution du portefeuille
-            st.line_chart(data=df_combined[['Date', 'Portfolio_DCA']].set_index('Date'))
+            st.line_chart(data=df_combined.set_index('Date')['Portfolio_DCA'])
         else:
             st.error(f"Le fichier `{selected_script}.py` ne contient pas de fonction `simulate_portfolio`.")
 except Exception as e:
@@ -77,5 +79,6 @@ except Exception as e:
 
 # Indication pour éviter la page blanche
 st.sidebar.write("💡 Utilisez le menu pour configurer votre portefeuille.")
+
 
 
