@@ -9,6 +9,7 @@ def simulate_portfolio(monthly_investment):
     """
     Simule le portefeuille prudent avec un investissement initial et/ou mensuel (DCA).
     :param monthly_investment: Montant investi chaque mois (€).
+    :return: Tuple contenant le DataFrame combiné et les résultats DCA.
     """
 
     # Charger les fichiers
@@ -31,7 +32,7 @@ def simulate_portfolio(monthly_investment):
     df_stoxx50.rename(columns={'NAV': 'VL_Stoxx50'}, inplace=True)
     df_pimco.rename(columns={'NAV': 'VL_PIMCO_Short_Term'}, inplace=True)
 
-    # Trier les fichiers par ordre chronologique (du plus ancien au plus récent)
+    # Trier les fichiers par ordre chronologique
     start_date = pd.to_datetime("2017-10-09")
     df_gov_bond = df_gov_bond[df_gov_bond['Date'] >= start_date].sort_values(by='Date', ascending=True).reset_index(drop=True)
     df_stoxx50 = df_stoxx50[df_stoxx50['Date'] >= start_date].sort_values(by='Date', ascending=True).reset_index(drop=True)
@@ -52,9 +53,9 @@ def simulate_portfolio(monthly_investment):
 
     # Frais courants (exprimés en pourcentage annuel)
     frais = {
-        'VL_Gov_Bond': 0.15,         # 0.15% pour Euro Gov Bond
-        'VL_Stoxx50': 0.09,          # 0.09% pour Euro STOXX 50
-        'VL_PIMCO_Short_Term': 0.50  # 0.50% pour PIMCO Short Term
+        'VL_Gov_Bond': 0.15,
+        'VL_Stoxx50': 0.09,
+        'VL_PIMCO_Short_Term': 0.50
     }
 
     # Appliquer les frais sur les VL
@@ -110,20 +111,13 @@ def simulate_portfolio(monthly_investment):
     # Simuler le DCA
     portfolio_dca, total_invested = simulate_dca(df_combined, monthly_investment)
 
-    # Afficher les résultats
-    final_value = portfolio_dca[-1]
-    print(f"Montant total investi : {total_invested} €")
-    print(f"Valeur finale du portefeuille : {final_value:.2f} €")
+    # Vérifier les résultats
+    if not portfolio_dca or not total_invested:
+        raise ValueError("Erreur lors de la simulation DCA. Aucune donnée générée.")
 
-    # Visualisation
-    plt.figure(figsize=(10, 6))
-    plt.plot(df_combined['Date'], portfolio_dca, label="Valeur du portefeuille (DCA)")
-    plt.title(f"Évolution du portefeuille (DCA : {monthly_investment}€/mois)")
-    plt.xlabel("Date")
-    plt.ylabel("Valeur (€)")
-    plt.legend()
-    plt.grid()
-    plt.show()
+    # Ajouter les résultats au DataFrame
+    df_combined['Portfolio_DCA'] = portfolio_dca
 
-
+    # Retourner les résultats et le DataFrame
+    return df_combined, total_invested
 
