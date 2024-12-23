@@ -105,16 +105,15 @@ def calculate_portfolio_value(df, weights):
 
 df_combined['Portfolio_Value'] = calculate_portfolio_value(df_combined, weights)
 
-# Simulation d'investissement mensuel (DCA) - Correction ajoutée
+# Simulation d'investissement mensuel (DCA) - Correction
 def simulate_dca_fixed(df, monthly_investment, annual_return):
     """
     Simule DCA (Dollar Cost Averaging) avec contributions mensuelles et rendement annuel.
     """
     portfolio_values = []
     total_invested = 0
+    portfolio_value = 0
     monthly_return = (1 + annual_return / 100) ** (1 / 12) - 1  # Rendement mensuel
-
-    portfolio_value = 0  # Valeur initiale du portefeuille
 
     for i, row in df.iterrows():
         # Ajouter des contributions tous les 21 jours (environ un mois de trading)
@@ -149,3 +148,4 @@ ax.set_xlabel("Date")
 ax.set_ylabel("Valeur (€)")
 ax.legend()
 st.pyplot(fig)
+
