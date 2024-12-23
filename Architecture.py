@@ -2,13 +2,13 @@ import streamlit as st
 import importlib
 import os
 
-# Title of the application
+# Titre de l'application
 st.title("Simulateur de portefeuilles InvestSmart 🚀")
 
-# Portfolio options
+# Options pour les portefeuilles et stratégies
 portfolio_options = {
     "100% US": {
-        "Prudent": "portefeuille_prudent_US",
+        "Prudent": "portefeuille_prudent",
         "Pondéré": "portefeuille_pondéré_USD",
         "Dynamique": "portefeuille_dynamique_USD"
     },
@@ -24,38 +24,50 @@ portfolio_options = {
     }
 }
 
-# User selects portfolio type
+# Menu déroulant pour sélectionner le type de portefeuille
+st.sidebar.header("Sélectionnez votre portefeuille")
 portfolio_type = st.sidebar.selectbox(
-    "Choisissez le type de portefeuille",
+    "Type de portefeuille",
     options=list(portfolio_options.keys())
 )
 
-# User selects portfolio strategy
+# Menu déroulant pour sélectionner la stratégie
 strategy = st.sidebar.selectbox(
-    "Choisissez la stratégie",
+    "Stratégie",
     options=list(portfolio_options[portfolio_type].keys())
 )
 
-# User selects monthly investment
+# Entrée pour le montant investi mensuellement
 monthly_investment = st.sidebar.number_input(
-    "Montant mensuel investi (€)", min_value=50, max_value=5000, value=250, step=50
+    "Montant investi chaque mois (€)",
+    min_value=50, max_value=5000, value=250, step=50
 )
 
-# Get the corresponding script name
+# Déterminer le fichier Python correspondant
 selected_script = portfolio_options[portfolio_type][strategy]
 
-# Dynamically import the selected portfolio script
-try:
-    module_path = f"{selected_script}"
-    portfolio_module = importlib.import_module(module_path)
+st.sidebar.write(f"🗂️ Script sélectionné : `{selected_script}.py`")
 
-    # Call the main function of the imported script to execute simulation
-    if hasattr(portfolio_module, "simulate_portfolio"):
-        portfolio_module.simulate_portfolio(monthly_investment)
+# Essayer de charger et exécuter le script correspondant
+try:
+    # Vérifier si le fichier Python existe dans le répertoire
+    script_path = os.path.join(os.getcwd(), f"{selected_script}.py")
+    if not os.path.exists(script_path):
+        st.error(f"Le fichier `{selected_script}.py` est introuvable. Assurez-vous qu'il est dans le bon répertoire.")
     else:
-        st.error(f"Le fichier {selected_script}.py ne contient pas de fonction 'simulate_portfolio'.")
-except ModuleNotFoundError as e:
-    st.error(f"Le module {selected_script} n'a pas été trouvé. Assurez-vous qu'il est dans le répertoire correct.")
+        # Importer dynamiquement le module
+        portfolio_module = importlib.import_module(selected_script)
+
+        # Vérifier si la fonction simulate_portfolio existe
+        if hasattr(portfolio_module, "simulate_portfolio"):
+            # Appeler la fonction simulate_portfolio avec le montant investi
+            portfolio_module.simulate_portfolio(monthly_investment)
+        else:
+            st.error(f"Le fichier `{selected_script}.py` ne contient pas de fonction `simulate_portfolio`.")
 except Exception as e:
-    st.error(f"Une erreur est survenue : {e}")
+    st.error(f"Une erreur est survenue : {str(e)}")
+
+# Indication pour éviter la page blanche
+st.sidebar.write("💡 Utilisez le menu pour configurer votre portefeuille.")
+
 
