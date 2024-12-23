@@ -103,4 +103,3 @@ except Exception as e:
 
 # Indication pour éviter la page blanche
 st.sidebar.write("💡 Utilisez le menu pour configurer votre portefeuille.")
-
