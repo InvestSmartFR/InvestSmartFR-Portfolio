@@ -78,10 +78,10 @@ try:
     portfolio_module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(portfolio_module)
 
-    # Vérifier si la fonction simulate_portfolio existe
-    if hasattr(portfolio_module, "simulate_portfolio"):
-        # Appeler la fonction simulate_portfolio avec le montant investi
-        results, df_combined = portfolio_module.simulate_portfolio(monthly_investment)
+    # Vérifier si la fonction simulate_dca existe
+    if hasattr(portfolio_module, "simulate_dca"):
+        # Appeler la fonction simulate_dca avec le montant investi
+        results, df_combined = portfolio_module.simulate_dca(monthly_investment=monthly_investment)
 
         # Afficher les résultats dans l'application Streamlit
         st.header("Résultats de la simulation 📊")
@@ -93,11 +93,9 @@ try:
         # Graphique d'évolution du portefeuille
         st.line_chart(data=df_combined.set_index('Date')['Portfolio_DCA'])
     else:
-        st.error(f"Le fichier `{script_filename}` ne contient pas de fonction `simulate_portfolio`.")
+        st.error(f"Le fichier `{script_filename}` ne contient pas de fonction `simulate_dca`.")
 except Exception as e:
     st.error(f"❌ Une erreur est survenue : {str(e)}")
 
 # Indication pour éviter la page blanche
 st.sidebar.write("💡 Utilisez le menu pour configurer votre portefeuille.")
-
-
