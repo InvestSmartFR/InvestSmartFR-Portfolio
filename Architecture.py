@@ -6,7 +6,7 @@ import pandas as pd
 st.title("Simulateur de portefeuilles InvestSmart 🚀")
 
 # URL de base pour accéder aux fichiers sur GitHub
-GITHUB_BASE_URL = "https://github.com/InvestSmartFR/InvestSmartFR-Portfolio/tree/Portefeuilles"
+GITHUB_BASE_URL = "https://raw.githubusercontent.com/InvestSmartFR/InvestSmartFR-Portfolio/Portefeuilles/"
 
 # Options pour les portefeuilles et stratégies
 portfolio_options = {
@@ -105,3 +105,4 @@ else:
 
 # Indication pour éviter la page blanche
 st.sidebar.write("💡 Utilisez le menu pour configurer votre portefeuille.")
+
