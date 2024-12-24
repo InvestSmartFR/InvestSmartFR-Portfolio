@@ -122,9 +122,9 @@ if script_content:
             # Calculer les performances
             performance_df = calculate_performance(df_combined, simulation_results)
 
-            # Afficher les résultats sous forme de tableau
+            # Afficher les résultats sous forme de tableau large
             st.header("Résultats de la simulation 📊")
-            st.dataframe(performance_df)
+            st.dataframe(performance_df, width=1000, height=600)
 
             # Graphique de la performance personnalisé
             st.header("Graphique de la croissance du portefeuille")
@@ -147,4 +147,3 @@ else:
 
 # Message par défaut
 st.sidebar.write("💡 Utilisez les options pour configurer votre portefeuille.")
-
