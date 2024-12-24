@@ -1,5 +1,6 @@
 import streamlit as st
 import requests
+import matplotlib.pyplot as plt
 
 # Base URL GitHub pour accéder aux scripts
 GITHUB_BASE_URL = "https://raw.githubusercontent.com/InvestSmartFR/InvestSmartFR-Portfolio/Portefeuilles/"
@@ -125,10 +126,18 @@ if script_content:
             st.header("Résultats de la simulation 📊")
             st.dataframe(performance_df)
 
-            # Graphique de la performance
+            # Graphique de la performance personnalisé
             st.header("Graphique de la croissance du portefeuille")
+            plt.figure(figsize=(10, 6))
             for investment, data in simulation_results.items():
-                st.line_chart({f"{investment}€": data['Portfolio']})
+                plt.plot(df_combined['Date'], data['Portfolio'], label=f"{investment}€ par mois")
+
+            plt.xlabel("Date")
+            plt.ylabel("Valeur du portefeuille (€)")
+            plt.title("Croissance du portefeuille avec investissement mensuel")
+            plt.legend()
+            plt.grid(True)
+            st.pyplot(plt)
         else:
             st.error(f"Le script `{script_name}` ne contient pas les fonctions nécessaires ou les données requises.")
     except Exception as e:
