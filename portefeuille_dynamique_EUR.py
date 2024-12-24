@@ -1,18 +1,29 @@
-import streamlit as st
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-import requests
 
-# Titre de l'application
-st.title("Simulateur de portefeuilles InvestSmart 🚀")
-
+# Charger les fichiers Excel localement
 files = {
     "Euro Gov Bond": "Historique VL Euro Gov Bond.xlsx",
     "Euro STOXX 50": "HistoricalData EuroStoxx 50.xlsx",
     "Small Cap": "iShares MSCI EMU Small Cap UCITS ETF.xlsx",
     "Mid Cap": "iShares MSCI Europe Mid Cap UCITS ETF.xlsx",
-    "PIMCO Euro Short": "PIMCO Euro Short-Term High Yield Corporate Bond Index UCITS ETF.xlsx"
+    "PIMCO Euro Short": "PIMCO Euro Short-Term High Yield Corporate Bond Index UCITS ETF.xlsx",
+}
+
+df_gov_bond = pd.read_excel(files["Euro Gov Bond"])
+df_stoxx50 = pd.read_excel(files["Euro STOXX 50"])
+df_small_cap = pd.read_excel(files["Small Cap"])
+df_mid_cap = pd.read_excel(files["Mid Cap"])
+df_pimco = pd.read_excel(files["PIMCO Euro Short"])
+
+# Définir les frais courants pour chaque support
+fees = {
+    "Euro Gov Bond": 0.0015,  # 0.15%
+    "Euro STOXX 50": 0.0009,  # 0.09%
+    "Small Cap": 0.0058,      # 0.58%
+    "Mid Cap": 0.0015,        # 0.15%
+    "PIMCO Euro Short": 0.005, # 0.50%
 }
 
 # Définir les frais courants pour chaque support
