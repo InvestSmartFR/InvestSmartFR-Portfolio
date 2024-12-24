@@ -48,6 +48,41 @@ script_name = portfolio_options[portfolio_type][strategy]
 script_url = f"{GITHUB_BASE_URL}{script_name}"
 st.sidebar.write(f"🗂️ Script sélectionné : `{script_name}`")
 
+# Saisie du montant d'investissement mensuel
+monthly_investment = st.sidebar.number_input(
+    "Montant mensuel investi (€)",
+    min_value=10,  # Montant minimal
+    max_value=10000,  # Montant maximal
+    value=100,  # Valeur par défaut
+    step=10
+)
+st.sidebar.markdown(f"**Montant sélectionné :** {monthly_investment}€")
+
+# Configuration des pondérations
+st.sidebar.header("Pondérations des supports")
+default_weights = {
+    'VL_Gov_Bond': 0.225,
+    'VL_PIMCO': 0.075,
+    'VL_Stoxx50': 0.40,
+    'VL_Small_Cap': 0.15,
+    'VL_Mid_Cap': 0.15,
+}
+weights = {}
+for support, default_weight in default_weights.items():
+    weights[support] = st.sidebar.slider(
+        f"{support}",
+        min_value=0.0,
+        max_value=1.0,
+        value=default_weight,
+        step=0.01
+    )
+
+# Normaliser les pondérations si nécessaire
+total_weight = sum(weights.values())
+if total_weight != 1.0:
+    st.sidebar.warning("Les pondérations ne totalisent pas 100%. Elles seront normalisées.")
+    weights = {k: v / total_weight for k, v in weights.items()}
+
 def download_script(script_url):
     """Télécharge le script depuis GitHub."""
     try:
@@ -70,10 +105,9 @@ if script_content:
         if "simulate_monthly_investment" in exec_globals and "df_combined" in exec_globals:
             simulate_monthly_investment = exec_globals["simulate_monthly_investment"]
             df_combined = exec_globals["df_combined"]
-            monthly_investments = [100, 250, 500, 750]
 
             # Appeler la fonction de simulation
-            simulation_results = simulate_monthly_investment(df_combined, monthly_investments)
+            simulation_results = simulate_monthly_investment(df_combined, [monthly_investment])
 
             # Afficher les résultats sous forme de tableau
             st.header("Résultats de la simulation 📊")
