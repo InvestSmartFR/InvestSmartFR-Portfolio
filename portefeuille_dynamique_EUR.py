@@ -3,6 +3,9 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
+# Titre de l'application
+st.title("Simulateur de portefeuilles InvestSmart 🚀")
+
 # Charger les fichiers d'investissement (remplacez par vos propres fichiers)
 files = {
     "Euro Gov Bond": "euro_gov_bond.xlsx",
