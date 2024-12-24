@@ -124,7 +124,7 @@ if script_content:
 
             # Afficher les résultats sous forme de tableau large
             st.header("Résultats de la simulation 📊")
-            st.dataframe(performance_df, width=1000, height=600)
+            st.dataframe(performance_df, use_container_width=True)
 
             # Graphique de la performance personnalisé
             st.header("Graphique de la croissance du portefeuille")
@@ -147,3 +147,4 @@ else:
 
 # Message par défaut
 st.sidebar.write("💡 Utilisez les options pour configurer votre portefeuille.")
+
