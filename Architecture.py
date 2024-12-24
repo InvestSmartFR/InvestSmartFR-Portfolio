@@ -2,7 +2,7 @@ import streamlit as st
 import requests
 
 # Base URL GitHub pour accéder aux scripts
-GITHUB_BASE_URL = "https://raw.githubusercontent.com/TON_UTILISATEUR_GITHUB/InvestSmart/Portefeuilles/"
+GITHUB_BASE_URL = "https://raw.githubusercontent.com/InvestSmartFR/InvestSmartFR-Portfolio/Portefeuilles/"
 
 # Titre de l'application
 st.title("Simulateur de portefeuilles InvestSmart 🚀")
