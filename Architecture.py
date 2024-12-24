@@ -1,11 +1,10 @@
 import streamlit as st
-import requests
 import pandas as pd
 import matplotlib.pyplot as plt
 
 # Base URL GitHub pour accéder aux scripts et au fichier des frais
 GITHUB_BASE_URL = "https://raw.githubusercontent.com/InvestSmartFR/InvestSmartFR-Portfolio/Portefeuilles/"
-FRAIS_FILE_URL = f"{GITHUB_BASE_URL}Frais%20par%20support.xlsx"
+FRAIS_FILE_PATH = "Frais par support.xlsx"  # Le fichier est dans le même dossier que le code architecture
 
 # Titre de l'application
 st.title("Simulateur de portefeuilles InvestSmart 🚀")
@@ -61,18 +60,17 @@ monthly_investment = st.sidebar.number_input(
 )
 st.sidebar.markdown(f"**Montant sélectionné :** {monthly_investment}€")
 
-# Télécharger le fichier des frais
-def download_fees_file():
+# Charger le fichier des frais
+def load_fees_file():
+    """Charge le fichier des frais depuis le répertoire local."""
     try:
-        response = requests.get(FRAIS_FILE_URL)
-        response.raise_for_status()
-        fees_data = pd.read_excel(response.content)
+        fees_data = pd.read_excel(FRAIS_FILE_PATH)
         return fees_data
-    except requests.exceptions.RequestException as e:
-        st.error(f"❌ Erreur lors du téléchargement du fichier des frais : {str(e)}")
+    except Exception as e:
+        st.error(f"❌ Erreur lors du chargement du fichier des frais : {str(e)}")
         return None
 
-fees_data = download_fees_file()
+fees_data = load_fees_file()
 
 # Télécharger le script Python pour récupérer les données dynamiques
 def download_script(script_url):
@@ -116,3 +114,4 @@ else:
 
 # Message par défaut
 st.sidebar.write("💡 Utilisez les options pour configurer votre portefeuille.")
+
