@@ -138,6 +138,15 @@ if script_content:
             plt.legend()
             plt.grid(True)
             st.pyplot(plt)
+
+            # Ajouter un graphique en camembert pour la répartition
+            st.header("Répartition du portefeuille")
+            fig, ax = plt.subplots()
+            ax.pie(weights.values(), labels=weights.keys(), autopct="%1.1f%%", startangle=90)
+            ax.axis('equal')  # Assure que le graphique est un cercle
+            plt.title("Répartition du portefeuille (%)")
+            st.pyplot(fig)
+
         else:
             st.error(f"Le script `{script_name}` ne contient pas les fonctions nécessaires ou les données requises.")
     except Exception as e:
