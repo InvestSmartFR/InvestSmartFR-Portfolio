@@ -192,4 +192,3 @@ else:
 
 # Message par défaut
 st.sidebar.write("💡 Utilisez les options pour configurer votre portefeuille.")
-
