@@ -2,17 +2,21 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import requests
 
 # Titre de l'application
 st.title("Simulateur de portefeuilles InvestSmart 🚀")
 
-# Charger les fichiers d'investissement (remplacez par vos propres fichiers)
+# Base URL GitHub pour accéder aux fichiers
+GITHUB_BASE_URL = "https://raw.githubusercontent.com/InvestSmartFR/InvestSmartFR-Portfolio/Configuration/"
+
+# Définir les fichiers d'investissement
 files = {
-    "Euro Gov Bond": "euro_gov_bond.xlsx",
-    "Euro STOXX 50": "euro_stoxx50.xlsx",
-    "Small Cap": "small_cap.xlsx",
-    "Mid Cap": "mid_cap.xlsx",
-    "PIMCO Euro Short": "pimco_euro_short.xlsx",
+    "Euro Gov Bond": GITHUB_BASE_URL + "euro_gov_bond.xlsx",
+    "Euro STOXX 50": GITHUB_BASE_URL + "euro_stoxx50.xlsx",
+    "Small Cap": GITHUB_BASE_URL + "small_cap.xlsx",
+    "Mid Cap": GITHUB_BASE_URL + "mid_cap.xlsx",
+    "PIMCO Euro Short": GITHUB_BASE_URL + "pimco_euro_short.xlsx",
 }
 
 # Définir les frais courants pour chaque support
@@ -40,11 +44,16 @@ def load_and_preprocess():
     dfs = []
     start_date = pd.to_datetime("2017-10-09")
 
-    for key, file in files.items():
-        df = pd.read_excel(file)
-        column_name = f"VL_{key.replace(' ', '_')}"
-        df = preprocess_data(df, column_name, start_date, fees[key])
-        dfs.append(df)
+    for key, url in files.items():
+        response = requests.get(url)
+        if response.status_code == 200:
+            df = pd.read_excel(response.content)
+            column_name = f"VL_{key.replace(' ', '_')}"
+            df = preprocess_data(df, column_name, start_date, fees[key])
+            dfs.append(df)
+        else:
+            st.error(f"Impossible de télécharger le fichier : {key}")
+            return None
 
     df_combined = dfs[0]
     for df in dfs[1:]:
