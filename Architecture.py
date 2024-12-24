@@ -74,6 +74,7 @@ base_supports = {
     "US Treasury Bond 3-7y USD (Acc) Shares": {"ISIN": "IE00B3VWN393", "VL": "VL_Treasury_Bond", "Fee": 0.0007},
     "S&P SmallCap 600 (Acc) Invesco": {"ISIN": "IE00BH3YZ803", "VL": "VL_SP_SmallCap", "Fee": 0.0014},
     "Core S&P 500 USD (Acc) iShares": {"ISIN": "IE00B5BMR087", "VL": "VL_SP500", "Fee": 0.0007},
+    "USD Short Duration High Yield Corp Bond USD (Acc) iShares": {"ISIN": "IE00BZ17CN18", "VL": "VL_Short_Duration", "Fee": 0.0045},
     "Nasdaq-100 EUR (Acc) Amundi": {"ISIN": "LU1829221024", "VL": "VL_Nasdaq100", "Fee": 0.0022},
     "S&P 400 US Mid Cap (Acc) SPDR": {"ISIN": "IE00B4Y6HC18", "VL": "VL_SP_MidCap", "Fee": 0.0030}
 }
