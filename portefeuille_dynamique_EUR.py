@@ -7,16 +7,12 @@ import requests
 # Titre de l'application
 st.title("Simulateur de portefeuilles InvestSmart 🚀")
 
-# Base URL GitHub pour accéder aux fichiers
-GITHUB_BASE_URL = "https://raw.githubusercontent.com/InvestSmartFR/InvestSmartFR-Portfolio/Configuration/"
-
-# Définir les fichiers d'investissement
 files = {
-    "Euro Gov Bond": GITHUB_BASE_URL + "euro_gov_bond.xlsx",
-    "Euro STOXX 50": GITHUB_BASE_URL + "euro_stoxx50.xlsx",
-    "Small Cap": GITHUB_BASE_URL + "small_cap.xlsx",
-    "Mid Cap": GITHUB_BASE_URL + "mid_cap.xlsx",
-    "PIMCO Euro Short": GITHUB_BASE_URL + "pimco_euro_short.xlsx",
+    "Euro Gov Bond": "Historique VL Euro Gov Bond.xlsx",
+    "Euro STOXX 50": "HistoricalData EuroStoxx 50.xlsx",
+    "Small Cap": "iShares MSCI EMU Small Cap UCITS ETF.xlsx",
+    "Mid Cap": "iShares MSCI Europe Mid Cap UCITS ETF.xlsx",
+    "PIMCO Euro Short": "PIMCO Euro Short-Term High Yield Corporate Bond Index UCITS ETF.xlsx"
 }
 
 # Définir les frais courants pour chaque support
