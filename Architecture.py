@@ -70,7 +70,12 @@ base_supports = {
     "Euro Short-Term High Yield Corp Bond EUR (Acc) PIMCO": {"ISIN": "IE00BD8D5G25", "VL": "VL_PIMCO", "Fee": 0.005},
     "Euro STOXX 50 EUR (Acc) Xtrackers": {"ISIN": "LU0380865021", "VL": "VL_Stoxx50", "Fee": 0.0009},
     "MSCI EMU Small Cap EUR (Acc) iShares": {"ISIN": "IE00B3VWMM18", "VL": "VL_Small_Cap", "Fee": 0.0058},
-    "MSCI Europe Mid Cap Unhedged EUR (Acc) iShares": {"ISIN": "IE00BF20LF40", "VL": "VL_Mid_Cap", "Fee": 0.0015}
+    "MSCI Europe Mid Cap Unhedged EUR (Acc) iShares": {"ISIN": "IE00BF20LF40", "VL": "VL_Mid_Cap", "Fee": 0.0015},
+    "US Treasury Bond 3-7y USD (Acc) Shares": {"ISIN": "IE00B3VWN393", "VL": "VL_Treasury_Bond", "Fee": 0.0007},
+    "S&P SmallCap 600 (Acc) Invesco": {"ISIN": "IE00BH3YZ803", "VL": "VL_SP_SmallCap", "Fee": 0.0014},
+    "Core S&P 500 USD (Acc) iShares": {"ISIN": "IE00B5BMR087", "VL": "VL_SP500", "Fee": 0.0007},
+    "Nasdaq-100 EUR (Acc) Amundi": {"ISIN": "LU1829221024", "VL": "VL_Nasdaq100", "Fee": 0.0022},
+    "S&P 400 US Mid Cap (Acc) SPDR": {"ISIN": "IE00B4Y6HC18", "VL": "VL_SP_MidCap", "Fee": 0.0030}
 }
 
 # Télécharger le script Python pour récupérer les données dynamiques
