@@ -4,9 +4,6 @@ import requests
 # Titre de l'application
 st.title("Simulateur de portefeuilles InvestSmart 🚀")
 
-# URL de base pour accéder aux fichiers sur GitHub
-GITHUB_BASE_URL = "https://github.com/InvestSmartFR/InvestSmartFR-Portfolio/tree/Configuration"
-
 # Options pour les portefeuilles et stratégies
 portfolio_options = {
     "100% US": {
