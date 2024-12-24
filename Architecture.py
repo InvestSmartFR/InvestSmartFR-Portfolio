@@ -59,30 +59,10 @@ monthly_investment = st.sidebar.number_input(
 st.sidebar.markdown(f"**Montant sélectionné :** {monthly_investment}€")
 
 # Configuration des pondérations
-st.sidebar.header("Pondérations des supports (%)")
-default_weights = {
-    'VL_Gov_Bond': 22.5,
-    'VL_PIMCO': 7.5,
-    'VL_Stoxx50': 40.0,
-    'VL_Small_Cap': 15.0,
-    'VL_Mid_Cap': 15.0,
-}
+default_weights = None
 weights = {}
-for support, default_weight in default_weights.items():
-    weights[support] = st.sidebar.slider(
-        f"{support}",
-        min_value=0.0,
-        max_value=100.0,
-        value=default_weight,
-        step=1.0
-    )
 
-# Normaliser les pondérations si nécessaire
-total_weight = sum(weights.values())
-if total_weight != 100.0:
-    st.sidebar.warning("Les pondérations ne totalisent pas 100%. Elles seront normalisées.")
-    weights = {k: (v / total_weight) * 100 for k, v in weights.items()}
-
+# Télécharger le script Python pour récupérer les pondérations par défaut
 def download_script(script_url):
     """Télécharge le script depuis GitHub."""
     try:
@@ -93,7 +73,6 @@ def download_script(script_url):
         st.error(f"❌ Erreur lors du téléchargement du script : {str(e)}")
         return None
 
-# Télécharger et exécuter le script Python correspondant
 script_content = download_script(script_url)
 
 if script_content:
@@ -101,7 +80,36 @@ if script_content:
     try:
         exec(script_content, exec_globals)
 
-        # Vérifier la présence des fonctions nécessaires
+        # Vérifier si des pondérations par défaut existent dans le script
+        if "default_weights" in exec_globals:
+            default_weights = exec_globals["default_weights"]
+        else:
+            st.warning("Le script ne contient pas de pondérations par défaut. Utilisation des valeurs génériques.")
+            default_weights = {
+                'Support 1': 25.0,
+                'Support 2': 25.0,
+                'Support 3': 25.0,
+                'Support 4': 25.0
+            }
+
+        # Créer des sliders pour ajuster les pondérations dynamiquement
+        st.sidebar.header("Pondérations des supports (%)")
+        for support, default_weight in default_weights.items():
+            weights[support] = st.sidebar.slider(
+                f"{support}",
+                min_value=0.0,
+                max_value=100.0,
+                value=default_weight,
+                step=1.0
+            )
+
+        # Normaliser les pondérations si nécessaire
+        total_weight = sum(weights.values())
+        if total_weight != 100.0:
+            st.sidebar.warning("Les pondérations ne totalisent pas 100%. Elles seront normalisées.")
+            weights = {k: (v / total_weight) * 100 for k, v in weights.items()}
+
+        # Vérifier la présence des fonctions nécessaires pour la simulation
         if "simulate_monthly_investment" in exec_globals and "df_combined" in exec_globals and "calculate_performance" in exec_globals:
             simulate_monthly_investment = exec_globals["simulate_monthly_investment"]
             df_combined = exec_globals["df_combined"]
@@ -118,11 +126,9 @@ if script_content:
             st.dataframe(performance_df)
 
             # Graphique de la performance
-            plt.figure(figsize=(14, 8))
+            st.header("Graphique de la croissance du portefeuille")
             for investment, data in simulation_results.items():
-                st.line_chart({
-                    f"{investment}€": data['Portfolio'] for investment, data in simulation_results.items()
-                })
+                st.line_chart({f"{investment}€": data['Portfolio']})
         else:
             st.error(f"Le script `{script_name}` ne contient pas les fonctions nécessaires ou les données requises.")
     except Exception as e:
@@ -132,3 +138,4 @@ else:
 
 # Message par défaut
 st.sidebar.write("💡 Utilisez les options pour configurer votre portefeuille.")
+
