@@ -114,11 +114,6 @@ if script_content:
                 step=1.0
             )
 
-        # Normaliser les pondérations
-        total_weight = sum(filtered_weights.values())
-        if total_weight != 100:
-            filtered_weights = {k: v / total_weight * 100 for k, v in filtered_weights.items()}
-
         # Afficher les résultats de simulation
         simulation_results = exec_globals["simulate_monthly_investment"](df_combined, [monthly_investment])
         performance_df = exec_globals["calculate_performance"](df_combined, simulation_results)
@@ -180,4 +175,4 @@ else:
     st.error("Impossible de récupérer le script sélectionné.")
 
 # Message par défaut
-st.sidebar.write("💡 Utilisez les options pour configurer votre portefeuille.")
+st.sidebar.write("💡 Utilisez les options pour configurer votre portefeuille."
