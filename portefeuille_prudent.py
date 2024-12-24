@@ -9,7 +9,7 @@ files = {
     "PIMCO Euro Short": "PIMCO Euro Short-Term High Yield Corporate Bond Index UCITS ETF.xlsx",
 }
 
-# Lire les fichiers Excel
+# Chargement des données
 df_gov_bond = pd.read_excel(files["Euro Gov Bond"])
 df_stoxx50 = pd.read_excel(files["Euro STOXX 50"])
 df_pimco = pd.read_excel(files["PIMCO Euro Short"])
@@ -50,6 +50,9 @@ df_combined = dfs[0]
 for df in dfs[1:]:
     df_combined = pd.merge(df_combined, df[['Date', df.columns[-1]]], on='Date', how='outer')
 
+# Vérification des colonnes après fusion
+assert 'VL_Short_Term' in df_combined.columns, "Le support PIMCO n'est pas présent dans df_combined après fusion."
+
 # Trier les dates et interpoler/remplir les valeurs manquantes
 df_combined = df_combined.sort_values(by='Date', ascending=True).reset_index(drop=True)
 df_combined.iloc[:, 1:] = (
@@ -63,10 +66,14 @@ df_combined.iloc[:, 1:] = (
 weights = {
     'VL_Gov_Bond': 0.50,
     'VL_Stoxx50': 0.30,
-    'VL_Short_Term': 0.20,
+    'VL_Short_Term': 0.20,  # Assurez-vous que la pondération est non nulle
 }
 
-# Calculer la valeur du portefeuille
+# Vérification des pondérations
+assert 'VL_Short_Term' in weights, "Le support PIMCO n'a pas de pondération définie."
+assert weights['VL_Short_Term'] > 0, "La pondération du support PIMCO est nulle."
+
+# Calcul de la valeur du portefeuille
 def calculate_portfolio_value(df, weights):
     """
     Calcule la valeur totale du portefeuille en pondérant les VL par leurs poids.
@@ -147,17 +154,3 @@ performance_df = calculate_performance(df_combined, simulation_results)
 
 # Affichage du tableau de performance
 print(performance_df)
-
-# Visualisation de la croissance du portefeuille
-plt.figure(figsize=(14, 8))
-for investment, data in simulation_results.items():
-    plt.plot(df_combined['Date'], data['Portfolio'], label=f'{investment}€ par mois')
-    plt.text(df_combined['Date'].iloc[-1], data['Portfolio'][-1], f'{data["Portfolio"][-1]:,.2f}€',
-             color='black', ha='center', va='bottom', fontsize=10)
-
-plt.title("Croissance du portefeuille avec investissement mensuel (avec frais)")
-plt.xlabel("Date")
-plt.ylabel("Valeur du portefeuille (€)")
-plt.legend()
-plt.grid(True)
-plt.show()
