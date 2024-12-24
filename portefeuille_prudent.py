@@ -62,7 +62,7 @@ df_combined.iloc[:, 1:] = (
 weights = {
     'VL_Gov_Bond': 0.50,
     'VL_Stoxx50': 0.30,
-    'VL_Short_Term': 0.20
+    'VL_Short_Term': 0.20,
 }
 
 # Calcul de la valeur du portefeuille
