@@ -44,7 +44,7 @@ df_stoxx50 = preprocess_data(df_stoxx50, 'VL_Stoxx50', start_date, fees["Euro ST
 df_pimco = preprocess_data(df_pimco, 'VL_PIMCO', start_date, fees["PIMCO Euro Short"])
 
 # Fusionner les données sur la base des dates
-dfs = [df_gov_bond, df_stoxx50, df_small_cap, df_mid_cap, df_pimco]
+dfs = [df_gov_bond, df_stoxx50, df_pimco]
 df_combined = dfs[0]
 for df in dfs[1:]:
     df_combined = pd.merge(df_combined, df[['Date', df.columns[-1]]], on='Date', how='outer')
