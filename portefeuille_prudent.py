@@ -22,27 +22,36 @@ fees = {
 }
 
 # Prétraitement des fichiers
-def preprocess_data(df, column_name, start_date, fee_rate):
+def preprocess_data(df, column_name, start_date):
     """
-    Prépare les données : conversion des dates, tri, filtre, et application des frais.
+    Prépare les données : conversion des dates, tri et filtre.
     """
     df['Date'] = pd.to_datetime(df['Date'], errors='coerce', dayfirst=True)
     df = df.dropna(subset=['Date']).sort_values(by='Date').reset_index(drop=True)
     df = df[df['Date'] >= start_date]  # Filtrer par la date de départ
     df.rename(columns={'NAV': column_name}, inplace=True)
+    return df
 
-    # Appliquer les frais courants
-    daily_fee_rate = (1 - fee_rate) ** (1 / 252)
-    df[column_name] *= daily_fee_rate ** np.arange(len(df))
+# Appliquer les frais courants
+def apply_fees(df, fees):
+    """
+    Ajuste les VL pour prendre en compte les frais courants.
+    Les frais sont appliqués quotidiennement sur une base annuelle.
+    """
+    days_in_year = 365.25
+    for col, fee in fees.items():
+        if col in df.columns:
+            daily_fee = (1 - fee) ** (1 / days_in_year)
+            df[col] = df[col] * (daily_fee ** np.arange(len(df)))
     return df
 
 # Définir la date de départ
 start_date = pd.to_datetime("2017-10-09")
 
 # Préparer chaque fichier
-df_gov_bond = preprocess_data(df_gov_bond, 'VL_Gov_Bond', start_date, fees["Euro Gov Bond"])
-df_stoxx50 = preprocess_data(df_stoxx50, 'VL_Stoxx50', start_date, fees["Euro STOXX 50"])
-df_pimco = preprocess_data(df_pimco, 'VL_PIMCO', start_date, fees["Euro Short-Term High Yield Corp Bond EUR (Acc) PIMCO"])
+df_gov_bond = preprocess_data(df_gov_bond, 'VL_Gov_Bond', start_date)
+df_stoxx50 = preprocess_data(df_stoxx50, 'VL_Stoxx50', start_date)
+df_pimco = preprocess_data(df_pimco, 'VL_PIMCO_Short_Term', start_date)
 
 # Fusionner les données
 dfs = [df_gov_bond, df_stoxx50, df_pimco]
@@ -59,11 +68,18 @@ df_combined.iloc[:, 1:] = (
     .bfill()
 )
 
+# Appliquer les frais sur les VL
+df_combined = apply_fees(df_combined, {
+    'VL_Gov_Bond': fees["Euro Gov Bond"],
+    'VL_Stoxx50': fees["Euro STOXX 50"],
+    'VL_PIMCO_Short_Term': fees["Euro Short-Term High Yield Corp Bond EUR (Acc) PIMCO"]
+})
+
 # Définir les pondérations du portefeuille
 weights = {
     'VL_Gov_Bond': 0.50,
     'VL_Stoxx50': 0.30,
-    'VL_PIMCO': 0.20
+    'VL_PIMCO_Short_Term': 0.20
 }
 
 # Calcul de la valeur totale du portefeuille
@@ -88,7 +104,7 @@ def simulate_monthly_investment(df, monthly_investments):
         interests_cumulative = []
 
         for i, row in df.iterrows():
-            if i % 21 == 0:  # Approximation d'un mois
+            if i % 21 == 0:  # Approximativement un mois
                 total_capital += investment
             portfolio_current_value = row['Portfolio_Value'] * (total_capital / 100)
             portfolio_value.append(portfolio_current_value)
@@ -152,6 +168,3 @@ plt.ylabel("Valeur du portefeuille (€)")
 plt.legend()
 plt.grid(True)
 plt.show()
-
-
-
