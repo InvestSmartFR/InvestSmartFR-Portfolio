@@ -133,9 +133,14 @@ default_weights = {
     'VL_Mid_Cap': 0.15,
 }
 
-monthly_investments = [100, 250, 500, 750]
+# Correction : Simulation avec arguments fournis
 df_combined = simulate_portfolio(df_combined, default_weights)
+
+# Simulation d'investissements mensuels
+monthly_investments = [100, 250, 500, 750]
 simulation_results = simulate_monthly_investment(df_combined, monthly_investments)
+
+# Calcul des performances
 performance_df = calculate_performance(df_combined, simulation_results)
 
 # Affichage des résultats
