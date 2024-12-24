@@ -88,21 +88,6 @@ base_supports = {
     "S&P 400 US Mid Cap (Acc) SPDR": "VL_MidCap_US"
 }
 
-# Ajout des codes ISIN
-isin_codes = {
-    "Euro Gov Bond 7-10 EUR (Acc) Amundi": "LU1287023185",
-    "Euro Short-Term High Yield Corp Bond EUR (Acc) PIMCO": "IE00BD8D5G25",
-    "Euro STOXX 50 EUR (Acc) Xtrackers": "LU0380865021",
-    "MSCI EMU Small Cap EUR (Acc) iShares": "IE00B3VWMM18",
-    "MSCI Europe Mid Cap Unhedged EUR (Acc) iShares": "IE00BF20LF40",
-    "US Treasury Bond 3-7y USD (Acc) Shares": "IE00B3VWN393",
-    "S&P SmallCap 600 (Acc) Invesco": "IE00BH3YZ803",
-    "Core S&P 500 USD (Acc) iShares": "IE00B5BMR087",
-    "USD Short Duration High Yield Corp Bond USD (Acc) iShares": "IE00BZ17CN18",
-    "Nasdaq-100 EUR (Acc) Amundi": "LU1829221024",
-    "S&P 400 US Mid Cap (Acc) SPDR": "IE00B4YBJ215"  # Mise à jour effectuée
-}
-
 if script_content:
     exec_globals = {}
     try:
@@ -131,14 +116,54 @@ if script_content:
                 step=1.0
             )
 
+        # Appeler la fonction de simulation
+        simulation_results = exec_globals["simulate_monthly_investment"](df_combined, [monthly_investment])
+
+        # Calculer les performances
+        performance_df = exec_globals["calculate_performance"](df_combined, simulation_results)
+
+        # Séparer les données en deux tableaux
+        table1 = performance_df[["Investissement Mensuel", "Rendement Annualisé", "Rendement Cumulé", "Valeur Finale"]]
+        table2 = performance_df[["Investissement Mensuel", "Valeur Finale Après Impôt", "Durée de l'Investissement"]]
+
+        # Afficher le premier tableau
+        st.header("Résultats de la simulation 📊")
+        st.subheader("Performance avant impôts")
+        st.dataframe(table1, use_container_width=True)
+
+        # Afficher le deuxième tableau
+        st.subheader("Performance après impôts")
+        st.dataframe(table2, use_container_width=True)
+        st.caption("*Imposition au Prélèvement Forfaitaire Unique")
+
+        # Graphique de la performance personnalisé
+        st.header("Graphique de la croissance du portefeuille")
+        plt.figure(figsize=(10, 6))
+        for investment, data in simulation_results.items():
+            plt.plot(df_combined["Date"], data["Portfolio"], label=f"{investment}€ par mois")
+
+        plt.xlabel("Date")
+        plt.ylabel("Valeur du portefeuille (€)")
+        plt.title(f"Croissance du portefeuille avec un investissement mensuel de {monthly_investment}€")
+        plt.legend()
+        plt.grid(True)
+        st.pyplot(plt)
+
+        # Graphique en camembert pour la répartition
+        st.header("Répartition du portefeuille")
+        fig, ax = plt.subplots()
+        labels = [support for support, weight in filtered_weights.items() if weight > 0]
+        sizes = [weight for weight in filtered_weights.values() if weight > 0]
+        ax.pie(sizes, labels=labels, autopct="%1.1f%%", startangle=90)
+        ax.axis("equal")
+        st.pyplot(fig)
+
         # Afficher les supports et leurs informations
         st.header("Informations sur les supports")
         filtered_support_data = {
             "Nom": [support for support in filtered_weights.keys()],
-            "ISIN": [isin_codes[support] for support in filtered_weights.keys()],
-            "Frais courants (%)": [
-                f"{fees.get(base_supports[support], 0) * 100:.2f}%" for support in filtered_weights.keys()
-            ]
+            "ISIN": [k for k, v in base_supports.items() if v in weights],
+            "Frais courants (%)": [fees.get(v, 0) for v in weights.keys()]
         }
         filtered_support_df = pd.DataFrame(filtered_support_data)
         st.dataframe(filtered_support_df, use_container_width=True)
