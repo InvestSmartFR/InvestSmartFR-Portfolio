@@ -122,9 +122,19 @@ if script_content:
             # Calculer les performances
             performance_df = calculate_performance(df_combined, simulation_results)
 
-            # Afficher les résultats sous forme de tableau large
+            # Séparer les données en deux tableaux
+            table1 = performance_df[["Investissement Mensuel", "Rendement Annualisé", "Rendement Cumulé", "Valeur Finale"]]
+            table2 = performance_df[["Investissement Mensuel", "Valeur Finale Après Impôt", "Durée de l'Investissement"]]
+
+            # Afficher le premier tableau
             st.header("Résultats de la simulation 📊")
-            st.dataframe(performance_df, use_container_width=True)
+            st.subheader("Performance avant impôts")
+            st.dataframe(table1, use_container_width=True)
+
+            # Afficher le deuxième tableau
+            st.subheader("Performance après impôts")
+            st.dataframe(table2, use_container_width=True)
+            st.caption("*Imposition au Prélèvement Forfaitaire Unique")
 
             # Graphique de la performance personnalisé
             st.header("Graphique de la croissance du portefeuille")
@@ -156,4 +166,3 @@ else:
 
 # Message par défaut
 st.sidebar.write("💡 Utilisez les options pour configurer votre portefeuille.")
-
