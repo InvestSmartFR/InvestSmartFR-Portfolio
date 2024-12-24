@@ -60,11 +60,7 @@ monthly_investment = st.sidebar.number_input(
 )
 st.sidebar.markdown(f"**Montant sélectionné :** {monthly_investment}€")
 
-# Configuration des pondérations
-default_weights = None
-weights = {}
-
-# Télécharger le script Python pour récupérer les pondérations par défaut
+# Télécharger le script Python pour récupérer les données dynamiques
 def download_script(script_url):
     """Télécharge le script depuis GitHub."""
     try:
@@ -77,37 +73,48 @@ def download_script(script_url):
 
 script_content = download_script(script_url)
 
+# Base générique pour les supports
+base_supports = {
+    "Euro Gov Bond 7-10 EUR (Acc) Amundi": "LU1287023185",
+    "Euro Short-Term High Yield Corp Bond EUR (Acc) PIMCO": "IE00BD8D5G25",
+    "Euro STOXX 50 EUR (Acc) Xtrackers": "LU0380865021",
+    "MSCI EMU Small Cap EUR (Acc) iShares": "IE00B3VWMM18",
+    "MSCI Europe Mid Cap Unhedged EUR (Acc) iShares": "IE00BF20LF40",
+    "US Treasury Bond 3-7y USD (Acc) Shares": "IE00B3VWN393",
+    "S&P SmallCap 600 (Acc) Invesco": "IE00BH3YZ803",
+    "Core S&P 500 USD (Acc) iShares": "IE00B5BMR087",
+    "USD Short Duration High Yield Corp Bond USD (Acc) iShares": "IE00BZ17CN18",
+    "Nasdaq-100 EUR (Acc) Amundi": "LU1829221024",
+    "S&P 400 US Mid Cap (Acc) SPDR": "SPDR"
+}
+
 if script_content:
     exec_globals = {}
     try:
         exec(script_content, exec_globals)
 
-        # Vérifier si des pondérations spécifiques sont définies dans le script
-        if "weights" in exec_globals:
-            default_weights = {
-                "Euro Gov Bond 7-10 EUR (Acc) Amundi": exec_globals["weights"].get("VL_Gov_Bond", 0) * 100,
-                "Euro Short-Term High Yield Corp Bond EUR (Acc) PIMCO": exec_globals["weights"].get("VL_PIMCO", 0) * 100,
-                "Euro STOXX 50 EUR (Acc) Xtrackers": exec_globals["weights"].get("VL_Stoxx50", 0) * 100,
-                "MSCI EMU Small Cap EUR (Acc) iShares": exec_globals["weights"].get("VL_Small_Cap", 0) * 100,
-                "MSCI Europe Mid Cap Unhedged EUR (Acc) iShares": exec_globals["weights"].get("VL_Mid_Cap", 0) * 100
-            }
-        else:
-            st.warning("Le script ne contient pas de pondérations spécifiques. Utilisation des valeurs génériques.")
-            default_weights = {
-                'Support 1': 25.0,
-                'Support 2': 25.0,
-                'Support 3': 25.0,
-                'Support 4': 25.0
-            }
+        # Récupérer les pondérations et frais dynamiques
+        weights = exec_globals.get("weights", {})
+        fees = exec_globals.get("fees", {})
 
-        # Créer des sliders pour ajuster les pondérations dynamiquement
+        # Créer les pondérations par défaut si absentes
+        if not weights:
+            st.warning("Le script ne contient pas de pondérations spécifiques. Utilisation des valeurs génériques.")
+            weights = {support: 0 for support in base_supports.keys()}
+
+        # Créer les frais dynamiques si absents
+        if not fees:
+            st.warning("Le script ne contient pas de frais spécifiques. Utilisation des valeurs génériques à 0.0.")
+            fees = {support: 0.0 for support in base_supports.keys()}
+
+        # Afficher les pondérations avec sliders
         st.sidebar.header("Pondérations des supports (%)")
-        for support, default_weight in default_weights.items():
+        for support in weights.keys():
             weights[support] = st.sidebar.slider(
                 f"{support}",
                 min_value=0.0,
                 max_value=100.0,
-                value=default_weight,
+                value=weights.get(support, 0) * 100,
                 step=1.0
             )
 
@@ -116,6 +123,16 @@ if script_content:
         if total_weight != 100.0:
             st.sidebar.warning("Les pondérations ne totalisent pas 100%. Elles seront normalisées.")
             weights = {k: (v / total_weight) * 100 for k, v in weights.items()}
+
+        # Afficher les données des supports
+        st.header("Informations sur les supports")
+        support_data = {
+            "Nom": list(base_supports.keys()),
+            "ISIN": list(base_supports.values()),
+            "Frais courants (%)": [fees.get(support, 0) for support in base_supports.keys()]
+        }
+        support_df = pd.DataFrame(support_data)
+        st.dataframe(support_df, use_container_width=True)
 
         # Vérifier la présence des fonctions nécessaires pour la simulation
         if "simulate_monthly_investment" in exec_globals and "df_combined" in exec_globals and "calculate_performance" in exec_globals:
@@ -162,28 +179,6 @@ if script_content:
             ax.pie(weights.values(), labels=weights.keys(), autopct="%1.1f%%", startangle=90)
             ax.axis('equal')  # Assure que le graphique est un cercle
             st.pyplot(fig)
-
-            # Ajouter un tableau pour les supports
-            st.header("Informations sur les supports")
-            support_data = {
-                "Nom": list(default_weights.keys()),
-                "ISIN": [
-                    "LU1287023185",
-                    "IE00BD8D5G25",
-                    "LU0380865021",
-                    "IE00B3VWMM18",
-                    "IE00BF20LF40"
-                ],
-                "Frais courants (%)": [
-                    "0.15",
-                    "0.50",
-                    "0.09",
-                    "0.58",
-                    "0.15"
-                ]
-            }
-            support_df = pd.DataFrame(support_data)
-            st.dataframe(support_df, use_container_width=True)
 
         else:
             st.error(f"Le script `{script_name}` ne contient pas les fonctions nécessaires ou les données requises.")
