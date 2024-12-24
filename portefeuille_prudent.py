@@ -6,24 +6,17 @@ import matplotlib.pyplot as plt
 files = {
     "Euro Gov Bond": "Historique VL Euro Gov Bond.xlsx",
     "Euro STOXX 50": "HistoricalData EuroStoxx 50.xlsx",
-    "Small Cap": "iShares MSCI EMU Small Cap UCITS ETF.xlsx",
-    "Mid Cap": "iShares MSCI Europe Mid Cap UCITS ETF.xlsx",
     "PIMCO Euro Short": "PIMCO Euro Short-Term High Yield Corporate Bond Index UCITS ETF.xlsx",
 }
 
-# Charger les fichiers
 df_gov_bond = pd.read_excel(files["Euro Gov Bond"])
 df_stoxx50 = pd.read_excel(files["Euro STOXX 50"])
-df_small_cap = pd.read_excel(files["Small Cap"])
-df_mid_cap = pd.read_excel(files["Mid Cap"])
 df_pimco = pd.read_excel(files["PIMCO Euro Short"])
 
 # Définir les frais courants pour chaque support
 fees = {
     "Euro Gov Bond": 0.0015,  # 0.15%
     "Euro STOXX 50": 0.0009,  # 0.09%
-    "Small Cap": 0.0058,      # 0.58%
-    "Mid Cap": 0.0015,        # 0.15%
     "PIMCO Euro Short": 0.005, # 0.50%
 }
 
@@ -48,12 +41,10 @@ start_date = pd.to_datetime("2017-10-09")
 # Préparer chaque fichier avec les frais inclus
 df_gov_bond = preprocess_data(df_gov_bond, 'VL_Gov_Bond', start_date, fees["Euro Gov Bond"])
 df_stoxx50 = preprocess_data(df_stoxx50, 'VL_Stoxx50', start_date, fees["Euro STOXX 50"])
-df_small_cap = preprocess_data(df_small_cap, 'VL_Small_Cap', start_date, fees["Small Cap"])
-df_mid_cap = preprocess_data(df_mid_cap, 'VL_Mid_Cap', start_date, fees["Mid Cap"])
-df_pimco = preprocess_data(df_pimco, 'VL_PIMCO', start_date, fees["PIMCO Euro Short"])
+df_pimco = preprocess_data(df_pimco, 'VL_Short_Term', start_date, fees["PIMCO Euro Short"])
 
 # Fusionner les données sur la base des dates
-dfs = [df_gov_bond, df_stoxx50, df_small_cap, df_mid_cap, df_pimco]
+dfs = [df_gov_bond, df_stoxx50, df_pimco]
 df_combined = dfs[0]
 for df in dfs[1:]:
     df_combined = pd.merge(df_combined, df[['Date', df.columns[-1]]], on='Date', how='outer')
@@ -69,14 +60,12 @@ df_combined.iloc[:, 1:] = (
 
 # Définir les pondérations du portefeuille
 weights = {
-    'VL_Gov_Bond': 0.225,
-    'VL_PIMCO': 0.075,  # Correspond à PIMCO Euro Short-Term
-    'VL_Stoxx50': 0.40,
-    'VL_Small_Cap': 0.15,
-    'VL_Mid_Cap': 0.15,
+    'VL_Gov_Bond': 0.50,
+    'VL_Stoxx50': 0.30,
+    'VL_Short_Term': 0.20
 }
 
-# Calculer la valeur du portefeuille
+# Calcul de la valeur du portefeuille
 def calculate_portfolio_value(df, weights):
     """
     Calcule la valeur totale du portefeuille en pondérant les VL par leurs poids.
@@ -119,7 +108,7 @@ def simulate_monthly_investment(df, monthly_investments):
 monthly_investments = [100, 250, 500, 750]
 simulation_results = simulate_monthly_investment(df_combined, monthly_investments)
 
-# Calcul de la performance
+# Calculer la performance
 def calculate_performance(df, results):
     """
     Calcule la performance du portefeuille pour chaque scénario d'investissement.
@@ -155,7 +144,10 @@ def calculate_performance(df, results):
 
 performance_df = calculate_performance(df_combined, simulation_results)
 
-# Afficher la courbe d'évolution du portefeuille
+# Affichage du tableau de performance
+print(performance_df)
+
+# Visualisation de la croissance du portefeuille
 plt.figure(figsize=(14, 8))
 for investment, data in simulation_results.items():
     plt.plot(df_combined['Date'], data['Portfolio'], label=f'{investment}€ par mois')
@@ -168,6 +160,3 @@ plt.ylabel("Valeur du portefeuille (€)")
 plt.legend()
 plt.grid(True)
 plt.show()
-
-# Afficher le tableau des performances
-print(performance_df)
