@@ -28,6 +28,16 @@ fees = {
     "PIMCO Euro Short": 0.005, # 0.50%
 }
 
+
+# Définir les pondérations du portefeuille
+weights = {
+    'VL_Gov_Bond': 0.225,
+    'VL_PIMCO': 0.075,  # Correspond à PIMCO Euro Short-Term
+    'VL_Stoxx50': 0.40,
+    'VL_Small_Cap': 0.15,
+    'VL_Mid_Cap': 0.15,
+}
+
 # Prétraitement des fichiers
 def preprocess_data(df, column_name, start_date, fee_rate):
     """
