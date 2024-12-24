@@ -18,7 +18,7 @@ df_pimco = pd.read_excel(files["PIMCO Euro Short"])
 fees = {
     "Euro Gov Bond": 0.0015,  # 0.15%
     "Euro STOXX 50": 0.0009,  # 0.09%
-    "PIMCO Euro Short": 0.005  # 0.50%
+    "PIMCO Euro Short": 0.005,  # 0.50%
 }
 
 # Prétraitement des fichiers
@@ -63,7 +63,7 @@ df_combined.iloc[:, 1:] = (
 weights = {
     'VL_Gov_Bond': 0.50,
     'VL_Stoxx50': 0.30,
-    'VL_PIMCO_Short_Term': 0.20
+    'VL_PIMCO_Short_Term': 0.20,
 }
 
 # Calcul de la valeur totale du portefeuille
