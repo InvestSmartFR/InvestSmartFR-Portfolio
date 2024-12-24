@@ -66,14 +66,14 @@ if script_content:
     try:
         exec(script_content, exec_globals)
 
-        # Vérifier la présence de la fonction principale dans le script
-        if "main" in exec_globals:
-            main_function = exec_globals["main"]
+        # Vérifier la présence de la fonction principale pour la simulation
+        if "simulate_portfolio_performance" in exec_globals:
+            simulate_portfolio_performance = exec_globals["simulate_portfolio_performance"]
 
-            # Appeler la fonction principale du script
-            main_function()
+            # Appeler la fonction de simulation
+            simulate_portfolio_performance()
         else:
-            st.error(f"Le script `{script_name}` ne contient pas de fonction principale `main` à exécuter.")
+            st.error(f"Le script `{script_name}` ne contient pas de fonction `simulate_portfolio_performance` à exécuter.")
     except Exception as e:
         st.error(f"❌ Une erreur est survenue lors de l'exécution du script : {str(e)}")
 else:
@@ -81,3 +81,4 @@ else:
 
 # Message par défaut
 st.sidebar.write("💡 Utilisez les options pour configurer votre portefeuille.")
+
