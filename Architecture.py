@@ -1,6 +1,7 @@
 import streamlit as st
 import requests
 import matplotlib.pyplot as plt
+import pandas as pd
 
 # Base URL GitHub pour accéder aux scripts
 GITHUB_BASE_URL = "https://raw.githubusercontent.com/InvestSmartFR/InvestSmartFR-Portfolio/Portefeuilles/"
@@ -161,6 +162,28 @@ if script_content:
             ax.pie(weights.values(), labels=weights.keys(), autopct="%1.1f%%", startangle=90)
             ax.axis('equal')  # Assure que le graphique est un cercle
             st.pyplot(fig)
+
+            # Ajouter un tableau pour les supports
+            st.header("Informations sur les supports")
+            support_data = {
+                "Nom": list(default_weights.keys()),
+                "ISIN": [
+                    "LU1287023185",
+                    "IE00BD8D5G25",
+                    "LU0380865021",
+                    "IE00B3VWMM18",
+                    "IE00BF20LF40"
+                ],
+                "Frais courants (%)": [
+                    "0.15",
+                    "0.50",
+                    "0.09",
+                    "0.58",
+                    "0.15"
+                ]
+            }
+            support_df = pd.DataFrame(support_data)
+            st.dataframe(support_df, use_container_width=True)
 
         else:
             st.error(f"Le script `{script_name}` ne contient pas les fonctions nécessaires ou les données requises.")
