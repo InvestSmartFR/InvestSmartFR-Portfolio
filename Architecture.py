@@ -116,31 +116,47 @@ if script_content:
                 step=1.0
             )
 
+        # Appeler la fonction de simulation
+        simulation_results = exec_globals["simulate_monthly_investment"](df_combined, [monthly_investment])
+
+        # Calculer les performances
+        performance_df = exec_globals["calculate_performance"](df_combined, simulation_results)
+
+        # Séparer les données en deux tableaux
+        table1 = performance_df[["Investissement Mensuel", "Rendement Annualisé", "Rendement Cumulé", "Valeur Finale"]]
+        table2 = performance_df[["Investissement Mensuel", "Valeur Finale Après Impôt", "Durée de l'Investissement"]]
+
+        # Afficher le premier tableau
+        st.header("Résultats de la simulation 📊")
+        st.subheader("Performance avant impôts")
+        st.dataframe(table1, use_container_width=True)
+
+        # Afficher le deuxième tableau
+        st.subheader("Performance après impôts")
+        st.dataframe(table2, use_container_width=True)
+        st.caption("*Imposition au Prélèvement Forfaitaire Unique")
+
         # Graphique de la performance personnalisé
-        if "simulate_monthly_investment" in exec_globals:
-            simulate_monthly_investment = exec_globals["simulate_monthly_investment"]
-            simulation_results = simulate_monthly_investment(df_combined, [monthly_investment])
+        st.header("Graphique de la croissance du portefeuille")
+        plt.figure(figsize=(10, 6))
+        for investment, data in simulation_results.items():
+            plt.plot(df_combined["Date"], data["Portfolio"], label=f"{investment}€ par mois")
 
-            st.header("Graphique de la croissance du portefeuille")
-            plt.figure(figsize=(10, 6))
-            for investment, data in simulation_results.items():
-                plt.plot(df_combined["Date"], data["Portfolio"], label=f"{investment}€ par mois")
+        plt.xlabel("Date")
+        plt.ylabel("Valeur du portefeuille (€)")
+        plt.title(f"Croissance du portefeuille avec un investissement mensuel de {monthly_investment}€")
+        plt.legend()
+        plt.grid(True)
+        st.pyplot(plt)
 
-            plt.xlabel("Date")
-            plt.ylabel("Valeur du portefeuille (€)")
-            plt.title(f"Croissance du portefeuille avec un investissement mensuel de {monthly_investment}€")
-            plt.legend()
-            plt.grid(True)
-            st.pyplot(plt)
-
-            # Graphique en camembert pour la répartition
-            st.header("Répartition du portefeuille")
-            fig, ax = plt.subplots()
-            labels = [support for support, weight in filtered_weights.items() if weight > 0]
-            sizes = [weight for weight in filtered_weights.values() if weight > 0]
-            ax.pie(sizes, labels=labels, autopct="%1.1f%%", startangle=90)
-            ax.axis("equal")
-            st.pyplot(fig)
+        # Graphique en camembert pour la répartition
+        st.header("Répartition du portefeuille")
+        fig, ax = plt.subplots()
+        labels = [support for support, weight in filtered_weights.items() if weight > 0]
+        sizes = [weight for weight in filtered_weights.values() if weight > 0]
+        ax.pie(sizes, labels=labels, autopct="%1.1f%%", startangle=90)
+        ax.axis("equal")
+        st.pyplot(fig)
 
         # Afficher les supports et leurs informations
         st.header("Informations sur les supports")
