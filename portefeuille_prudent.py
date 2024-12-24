@@ -60,9 +60,9 @@ df_combined.iloc[:, 1:] = (
 
 # Définir les pondérations du portefeuille
 weights = {
-    'VL_Gov_Bond': 0.5,
-    'VL_PIMCO': 0.20,  # Correspond à PIMCO Euro Short-Term
-    'VL_Stoxx50': 0.30,
+    'VL_Gov_Bond': 0.50,  # 50% Gov Bond
+    'VL_PIMCO': 0.20,     # 20% PIMCO
+    'VL_Stoxx50': 0.30,   # 30% Euro STOXX 50
 }
 
 # Calcul de la valeur du portefeuille
@@ -160,8 +160,3 @@ plt.ylabel("Valeur du portefeuille (€)")
 plt.legend()
 plt.grid(True)
 plt.show()
-
-performance_df = calculate_performance(df_combined, simulation_results)
-
-# Affichage du tableau de performance
-print(performance_df)
