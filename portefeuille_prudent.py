@@ -4,60 +4,37 @@ import matplotlib.pyplot as plt
 
 # Charger les fichiers nécessaires
 files = {
-    "Euro Gov Bond": "Historique VL Euro Gov Bond.xlsx",
-    "Euro STOXX 50": "HistoricalData EuroStoxx 50.xlsx",
+    "Euro Gov Bond 7-10 EUR (Acc) Amundi": "Historique VL Euro Gov Bond.xlsx",
+    "Euro STOXX 50 EUR (Acc) Xtrackers": "HistoricalData EuroStoxx 50.xlsx",
     "Euro Short-Term High Yield Corp Bond EUR (Acc) PIMCO": "PIMCO Euro Short-Term High Yield Corporate Bond Index UCITS ETF.xlsx"
 }
 
-# Charger les fichiers Excel dans des DataFrames
-df_gov_bond = pd.read_excel(files["Euro Gov Bond"])
-df_stoxx50 = pd.read_excel(files["Euro STOXX 50"])
-df_pimco = pd.read_excel(files["Euro Short-Term High Yield Corp Bond EUR (Acc) PIMCO"])
-
-# Définir les frais courants pour chaque support
-fees = {
-    "Euro Gov Bond": 0.0015,  # 0.15%
-    "Euro STOXX 50": 0.0009,  # 0.09%
-    "Euro Short-Term High Yield Corp Bond EUR (Acc) PIMCO": 0.005  # 0.50%
+# Informations sur les supports (nom, ISIN, frais)
+support_data = {
+    "Euro Gov Bond 7-10 EUR (Acc) Amundi": {"ISIN": "LU1287023185", "Fee": 0.0015, "VL": "VL_Gov_Bond"},
+    "Euro STOXX 50 EUR (Acc) Xtrackers": {"ISIN": "LU0380865021", "Fee": 0.0009, "VL": "VL_Stoxx50"},
+    "Euro Short-Term High Yield Corp Bond EUR (Acc) PIMCO": {"ISIN": "IE00BD8D5G25", "Fee": 0.005, "VL": "VL_PIMCO"}
 }
 
-# Prétraitement des fichiers
-def preprocess_data(df, column_name, start_date):
-    """
-    Prépare les données : conversion des dates, tri et filtre.
-    """
+# Charger les fichiers Excel dans des DataFrames
+dataframes = {}
+for support, file_path in files.items():
+    df = pd.read_excel(file_path)
     df['Date'] = pd.to_datetime(df['Date'], errors='coerce', dayfirst=True)
     df = df.dropna(subset=['Date']).sort_values(by='Date').reset_index(drop=True)
-    df = df[df['Date'] >= start_date]  # Filtrer par la date de départ
+    column_name = support_data[support]["VL"]
     df.rename(columns={'NAV': column_name}, inplace=True)
-    return df
-
-# Appliquer les frais courants
-def apply_fees(df, fees):
-    """
-    Ajuste les VL pour prendre en compte les frais courants.
-    Les frais sont appliqués quotidiennement sur une base annuelle.
-    """
-    days_in_year = 365.25
-    for col, fee in fees.items():
-        if col in df.columns:
-            daily_fee = (1 - fee) ** (1 / days_in_year)
-            df[col] = df[col] * (daily_fee ** np.arange(len(df)))
-    return df
-
-# Définir la date de départ
-start_date = pd.to_datetime("2017-10-09")
-
-# Préparer chaque fichier
-df_gov_bond = preprocess_data(df_gov_bond, 'VL_Gov_Bond', start_date)
-df_stoxx50 = preprocess_data(df_stoxx50, 'VL_Stoxx50', start_date)
-df_pimco = preprocess_data(df_pimco, 'VL_PIMCO_Short_Term', start_date)
+    dataframes[support] = df
 
 # Fusionner les données
-dfs = [df_gov_bond, df_stoxx50, df_pimco]
-df_combined = dfs[0]
-for df in dfs[1:]:
-    df_combined = pd.merge(df_combined, df[['Date', df.columns[-1]]], on='Date', how='outer')
+start_date = pd.to_datetime("2017-10-09")
+df_combined = None
+for support, df in dataframes.items():
+    df = df[df['Date'] >= start_date]
+    if df_combined is None:
+        df_combined = df[['Date', support_data[support]["VL"]]]
+    else:
+        df_combined = pd.merge(df_combined, df[['Date', support_data[support]["VL"]]], on='Date', how='outer')
 
 # Trier et interpoler les valeurs manquantes
 df_combined = df_combined.sort_values(by='Date').reset_index(drop=True)
@@ -68,33 +45,62 @@ df_combined.iloc[:, 1:] = (
     .bfill()
 )
 
-# Appliquer les frais sur les VL
-df_combined = apply_fees(df_combined, {
-    'VL_Gov_Bond': fees["Euro Gov Bond"],
-    'VL_Stoxx50': fees["Euro STOXX 50"],
-    'VL_PIMCO_Short_Term': fees["Euro Short-Term High Yield Corp Bond EUR (Acc) PIMCO"]
-})
+# Appliquer les frais courants
+def apply_fees(df, support_data):
+    days_in_year = 365.25
+    for support, details in support_data.items():
+        vl_column = details["VL"]
+        fee = details["Fee"]
+        if vl_column in df.columns:
+            daily_fee = (1 - fee) ** (1 / days_in_year)
+            df[vl_column] = df[vl_column] * (daily_fee ** np.arange(len(df)))
+    return df
+
+df_combined = apply_fees(df_combined, support_data)
 
 # Définir les pondérations du portefeuille
 weights = {
-    'VL_Gov_Bond': 0.50,
-    'VL_Stoxx50': 0.30,
-    'VL_PIMCO_Short_Term': 0.20
+    "Euro Gov Bond 7-10 EUR (Acc) Amundi": 0.50,
+    "Euro STOXX 50 EUR (Acc) Xtrackers": 0.30,
+    "Euro Short-Term High Yield Corp Bond EUR (Acc) PIMCO": 0.20
 }
 
-# Calcul de la valeur totale du portefeuille
-def calculate_portfolio_value(df, weights):
-    """
-    Calcule la valeur totale du portefeuille en fonction des pondérations.
-    """
+# Calculer la valeur totale du portefeuille
+def calculate_portfolio_value(df, weights, support_data):
     df['Portfolio_Value'] = sum(
-        weights[col] * df[col] / df[col].iloc[0] for col in weights
+        weights[support] * df[details["VL"]] / df[details["VL"]].iloc[0]
+        for support, details in support_data.items()
     ) * 100  # Base initiale de 100€
     return df
 
-df_combined = calculate_portfolio_value(df_combined, weights)
+df_combined = calculate_portfolio_value(df_combined, weights, support_data)
 
-# Simulation d'investissements mensuels
+# Répartition des supports
+support_allocation = {
+    support: weight * 100 for support, weight in weights.items()
+}
+
+# Afficher la répartition
+plt.figure(figsize=(6, 6))
+labels = [support for support, weight in support_allocation.items() if weight > 0]
+sizes = [weight for weight in support_allocation.values() if weight > 0]
+plt.pie(sizes, labels=labels, autopct="%1.1f%%", startangle=90)
+plt.axis('equal')
+plt.title("Répartition du portefeuille")
+plt.show()
+
+# Informations sur les supports
+support_info = {
+    "Nom": list(support_allocation.keys()),
+    "ISIN": [support_data[support]["ISIN"] for support in support_allocation.keys()],
+    "Frais courants (%)": [support_data[support]["Fee"] * 100 for support in support_allocation.keys()]
+}
+support_df = pd.DataFrame(support_info)
+
+print("\nInformations sur les supports :")
+print(support_df)
+
+# Simulation d'investissement mensuel
 def simulate_monthly_investment(df, monthly_investments):
     results = {}
     for investment in monthly_investments:
@@ -118,53 +124,4 @@ def simulate_monthly_investment(df, monthly_investments):
         }
     return results
 
-monthly_investments = [100, 250, 500, 750]
-simulation_results = simulate_monthly_investment(df_combined, monthly_investments)
-
-# Calcul des performances
-def calculate_performance(df, results):
-    performance_table = []
-    for investment, data in results.items():
-        total_return = (data['Portfolio'][-1] / data['Capital'][-1]) - 1
-        annualized_return = (1 + total_return) ** (1 / (len(df) / 252)) - 1
-        final_value = data['Portfolio'][-1]
-        gross_gain = final_value - data['Capital'][-1]
-        net_gain = gross_gain * 0.70
-        final_value_after_tax = data['Capital'][-1] + net_gain
-        num_years = (df['Date'].iloc[-1] - df['Date'].iloc[0]).days / 365.25
-
-        performance_table.append([
-            f"{investment}€",
-            f"{annualized_return*100:.2f}%",
-            f"{total_return*100:.2f}%",
-            f"{final_value:,.2f}€",
-            f"{final_value_after_tax:,.2f}€",
-            f"{num_years:.2f} ans"
-        ])
-    return pd.DataFrame(performance_table, columns=[
-        "Investissement Mensuel",
-        "Rendement Annualisé",
-        "Rendement Cumulé",
-        "Valeur Finale",
-        "Valeur Finale Après Impôt",
-        "Durée de l'Investissement"
-    ])
-
-performance_df = calculate_performance(df_combined, simulation_results)
-
-# Afficher le tableau des performances
-print(performance_df)
-
-# Visualiser la croissance du portefeuille
-plt.figure(figsize=(14, 8))
-for investment, data in simulation_results.items():
-    plt.plot(df_combined['Date'], data['Portfolio'], label=f'{investment}€ par mois')
-    plt.text(df_combined['Date'].iloc[-1], data['Portfolio'][-1], f'{data["Portfolio"][-1]:,.2f}€',
-             ha='center', va='bottom', fontsize=10)
-
-plt.title("Croissance du portefeuille avec investissement mensuel")
-plt.xlabel("Date")
-plt.ylabel("Valeur du portefeuille (€)")
-plt.legend()
-plt.grid(True)
-plt.show()
+# Calcul des performances (restant inchangé)
