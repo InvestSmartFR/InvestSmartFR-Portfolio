@@ -96,7 +96,8 @@ if script_content:
         # Renommer les colonnes dynamiquement en utilisant les noms complets
         if "df_combined" in exec_globals:
             df_combined = exec_globals["df_combined"]
-            for full_name, vl_name in base_supports.items():
+            for full_name, details in base_supports.items():
+                vl_name = details["ISIN"]
                 if vl_name in df_combined.columns:
                     df_combined.rename(columns={vl_name: full_name}, inplace=True)
 
@@ -104,30 +105,19 @@ if script_content:
         weights = exec_globals.get("weights", {})
         fees = exec_globals.get("fees", {})  # Chargement des frais
 
-        # Afficher les pondérations avec sliders
-        st.sidebar.header("Pondérations des supports (%)")
-        filtered_weights = {full_name: weights.get(vl_name, 0) * 100 for full_name, vl_name in base_supports.items() if vl_name in weights and weights[vl_name] > 0}
-        for support, weight in filtered_weights.items():
-            filtered_weights[support] = st.sidebar.slider(
-                f"{support}",
-                min_value=0.0,
-                max_value=100.0,
-                value=weight,
-                step=1.0
-            )
-
-        # Afficher les supports et leurs informations
-        st.header("Informations sur les supports")
+        # Filtrer les supports présents dans le portefeuille
         filtered_supports = {
             support: details
             for support, details in base_supports.items()
-            if support in filtered_weights and filtered_weights[support] > 0
+            if support in weights and weights[support] > 0
         }
+
+        # Construire le tableau final des informations sur les supports
         support_data = {
             "Nom": list(filtered_supports.keys()),
             "ISIN": [details["ISIN"] for details in filtered_supports.values()],
             "Frais courants (%)": [f"{details['Frais'] * 100:.2f}%" for details in filtered_supports.values()],
-            "Pondération (%)": [f"{filtered_weights[support]:.2f}" for support in filtered_supports.keys()]
+            "Pondération (%)": [f"{weights[support] * 100:.2f}" for support in filtered_supports.keys()]
         }
         support_df = pd.DataFrame(support_data)
         st.dataframe(support_df, use_container_width=True)
