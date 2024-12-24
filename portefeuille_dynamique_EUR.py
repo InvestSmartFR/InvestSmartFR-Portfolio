@@ -1,7 +1,6 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-import os
 import streamlit as st
 
 # Charger les fichiers Excel localement
@@ -13,6 +12,13 @@ files = {
     "PIMCO Euro Short": "PIMCO Euro Short-Term High Yield Corporate Bond Index UCITS ETF.xlsx",
 }
 
+# Charger les fichiers
+df_gov_bond = pd.read_excel(files["Euro Gov Bond"])
+df_stoxx50 = pd.read_excel(files["Euro STOXX 50"])
+df_small_cap = pd.read_excel(files["Small Cap"])
+df_mid_cap = pd.read_excel(files["Mid Cap"])
+df_pimco = pd.read_excel(files["PIMCO Euro Short"])
+
 # Définir les frais courants pour chaque support
 fees = {
     "Euro Gov Bond": 0.0015,  # 0.15%
@@ -22,63 +28,74 @@ fees = {
     "PIMCO Euro Short": 0.005, # 0.50%
 }
 
+# Prétraitement des fichiers
 def preprocess_data(df, column_name, start_date, fee_rate):
+    """
+    Prépare les données : format datetime, trie par date croissante, limite à start_date, applique les frais courants.
+    """
     df['Date'] = pd.to_datetime(df['Date'], errors='coerce', dayfirst=True)
-    df = df.dropna(subset=['Date']).sort_values(by='Date').reset_index(drop=True)
-    df = df[df['Date'] >= start_date]
+    df = df.dropna(subset=['Date']).sort_values(by='Date', ascending=True).reset_index(drop=True)
+    df = df[df['Date'] >= start_date]  # Filtrer à partir de start_date
     df.rename(columns={'NAV': column_name}, inplace=True)
 
+    # Appliquer les frais courants (annuels transformés en journaliers)
     daily_fee_rate = (1 - fee_rate) ** (1 / 252)
     df[column_name] *= daily_fee_rate ** np.arange(len(df))
     return df
-
-def load_and_preprocess():
-    # Vérification des fichiers
-    for key, file in files.items():
-        if not os.path.exists(file):
-            st.error(f"Le fichier '{file}' pour '{key}' est introuvable.")
-            return None
-
-    dfs = []
-    start_date = pd.to_datetime("2017-10-09")
-
-    for key, file in files.items():
-        try:
-            df = pd.read_excel(file)
-            column_name = f"VL_{key.replace(' ', '_')}"
-            df = preprocess_data(df, column_name, start_date, fees[key])
-            dfs.append(df)
-        except Exception as e:
-            st.error(f"Erreur lors du traitement du fichier {file}: {str(e)}")
-            return None
-
-    df_combined = dfs[0]
-    for df in dfs[1:]:
-        df_combined = pd.merge(df_combined, df[['Date', df.columns[-1]]], on='Date', how='outer')
-
-    df_combined = df_combined.sort_values(by='Date').reset_index(drop=True)
-    df_combined.iloc[:, 1:] = df_combined.iloc[:, 1:].interpolate().ffill().bfill()
-    return df_combined
 
 def simulate_portfolio(df, weights):
     """
     Simule la valeur du portefeuille en fonction des pondérations.
     """
-    if df is None:
-        raise ValueError("Les données du portefeuille sont manquantes")
-    
     # Vérifier les colonnes manquantes
     missing_columns = [col for col in weights.keys() if col not in df.columns]
     if missing_columns:
         raise ValueError(f"Colonnes manquantes : {missing_columns}")
     
     # Calculer la valeur totale du portefeuille
-    df = df.copy()
     df['Portfolio_Value'] = sum(
         weights[col] * df[col] / df[col].iloc[0] for col in weights
     ) * 10000  # Base de 10 000€
     return df
 
+# Définir la date de départ
+start_date = pd.to_datetime("2017-10-09")
+
+# Préparer chaque fichier avec les frais inclus
+df_gov_bond = preprocess_data(df_gov_bond, 'VL_Gov_Bond', start_date, fees["Euro Gov Bond"])
+df_stoxx50 = preprocess_data(df_stoxx50, 'VL_Stoxx50', start_date, fees["Euro STOXX 50"])
+df_small_cap = preprocess_data(df_small_cap, 'VL_Small_Cap', start_date, fees["Small Cap"])
+df_mid_cap = preprocess_data(df_mid_cap, 'VL_Mid_Cap', start_date, fees["Mid Cap"])
+df_pimco = preprocess_data(df_pimco, 'VL_PIMCO', start_date, fees["PIMCO Euro Short"])
+
+# Fusionner les données sur la base des dates
+dfs = [df_gov_bond, df_stoxx50, df_small_cap, df_mid_cap, df_pimco]
+df_combined = dfs[0]
+for df in dfs[1:]:
+    df_combined = pd.merge(df_combined, df[['Date', df.columns[-1]]], on='Date', how='outer')
+
+# Trier les dates et interpoler/remplir les valeurs manquantes
+df_combined = df_combined.sort_values(by='Date', ascending=True).reset_index(drop=True)
+df_combined.iloc[:, 1:] = (
+    df_combined.iloc[:, 1:]
+    .interpolate(method='linear', axis=0)
+    .ffill()  # Remplit les NaN par les valeurs précédentes
+    .bfill()  # Remplit les NaN restants par les valeurs suivantes
+)
+
+# Définir les pondérations du portefeuille
+weights = {
+    'VL_Gov_Bond': 0.225,
+    'VL_PIMCO': 0.075,  # Correspond à PIMCO Euro Short-Term
+    'VL_Stoxx50': 0.40,
+    'VL_Small_Cap': 0.15,
+    'VL_Mid_Cap': 0.15,
+}
+
+# Simuler le portefeuille
+df_combined = simulate_portfolio(df_combined, weights)
+
+# Simulation d'investissements mensuels
 def simulate_monthly_investment(df, monthly_investments):
     results = {}
     for investment in monthly_investments:
@@ -102,6 +119,11 @@ def simulate_monthly_investment(df, monthly_investments):
 
     return results
 
+# Simuler différents montants d'investissement mensuel
+monthly_investments = [100, 250, 500, 750]
+simulation_results = simulate_monthly_investment(df_combined, monthly_investments)
+
+# Calcul des performances
 def calculate_performance(df, results):
     performance_table = []
     for investment, data in results.items():
@@ -132,6 +154,15 @@ def calculate_performance(df, results):
         "Durée de l'Investissement"
     ])
 
+# Calcul des performances
+performance_df = calculate_performance(df_combined, simulation_results)
+
+# Affichage des résultats avec Streamlit
+st.title("Simulation de Portefeuille d'Investissement 💰")
+st.header("Résultats de la simulation 📊")
+st.dataframe(performance_df)
+
+# Visualisation
 def plot_growth(df, results):
     plt.figure(figsize=(14, 8))
     for investment, data in results.items():
@@ -146,43 +177,4 @@ def plot_growth(df, results):
     plt.grid(True)
     st.pyplot(plt)
 
-def main():
-    st.title("Simulation de Portefeuille d'Investissement 💰")
-    
-    # Charger les données prétraitées
-    df_combined = load_and_preprocess()
-    
-    if df_combined is None:
-        st.error("Impossible de charger les données. Veuillez vérifier les fichiers d'entrée.")
-        return
-
-    # Définir les pondérations par défaut
-    default_weights = {
-        'VL_Euro_Gov_Bond': 0.225,
-        'VL_PIMCO_Euro_Short': 0.075,
-        'VL_Euro_STOXX_50': 0.40,
-        'VL_Small_Cap': 0.15,
-        'VL_Mid_Cap': 0.15,
-    }
-
-    try:
-        # Simulation du portefeuille
-        df_combined = simulate_portfolio(df_combined, default_weights)
-        
-        # Simulation des investissements mensuels
-        monthly_investments = [100, 250, 500, 750]
-        simulation_results = simulate_monthly_investment(df_combined, monthly_investments)
-
-        # Calcul et affichage des performances
-        performance_df = calculate_performance(df_combined, simulation_results)
-        st.header("Résultats de la simulation 📊")
-        st.dataframe(performance_df)
-
-        # Visualisation
-        plot_growth(df_combined, simulation_results)
-
-    except Exception as e:
-        st.error(f"Une erreur est survenue lors de la simulation : {str(e)}")
-
-if __name__ == "__main__":
-    main()
+plot_growth(df_combined, simulation_results)
