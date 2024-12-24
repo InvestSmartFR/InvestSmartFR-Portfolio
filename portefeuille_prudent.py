@@ -9,7 +9,6 @@ files = {
     "PIMCO Euro Short": "PIMCO Euro Short-Term High Yield Corporate Bond Index UCITS ETF.xlsx",
 }
 
-# Chargement des données
 df_gov_bond = pd.read_excel(files["Euro Gov Bond"])
 df_stoxx50 = pd.read_excel(files["Euro STOXX 50"])
 df_pimco = pd.read_excel(files["PIMCO Euro Short"])
@@ -42,16 +41,13 @@ start_date = pd.to_datetime("2017-10-09")
 # Préparer chaque fichier avec les frais inclus
 df_gov_bond = preprocess_data(df_gov_bond, 'VL_Gov_Bond', start_date, fees["Euro Gov Bond"])
 df_stoxx50 = preprocess_data(df_stoxx50, 'VL_Stoxx50', start_date, fees["Euro STOXX 50"])
-df_pimco = preprocess_data(df_pimco, 'VL_Short_Term', start_date, fees["PIMCO Euro Short"])
+df_pimco = preprocess_data(df_pimco, 'VL_PIMCO', start_date, fees["PIMCO Euro Short"])
 
 # Fusionner les données sur la base des dates
-dfs = [df_gov_bond, df_stoxx50, df_pimco]
+dfs = [df_gov_bond, df_stoxx50, df_small_cap, df_mid_cap, df_pimco]
 df_combined = dfs[0]
 for df in dfs[1:]:
     df_combined = pd.merge(df_combined, df[['Date', df.columns[-1]]], on='Date', how='outer')
-
-# Vérification des colonnes après fusion
-assert 'VL_Short_Term' in df_combined.columns, "Le support PIMCO n'est pas présent dans df_combined après fusion."
 
 # Trier les dates et interpoler/remplir les valeurs manquantes
 df_combined = df_combined.sort_values(by='Date', ascending=True).reset_index(drop=True)
@@ -64,14 +60,10 @@ df_combined.iloc[:, 1:] = (
 
 # Définir les pondérations du portefeuille
 weights = {
-    'VL_Gov_Bond': 0.50,
+    'VL_Gov_Bond': 0.5,
+    'VL_PIMCO': 0.20,  # Correspond à PIMCO Euro Short-Term
     'VL_Stoxx50': 0.30,
-    'VL_Short_Term': 0.20,  # Assurez-vous que la pondération est non nulle
 }
-
-# Vérification des pondérations
-assert 'VL_Short_Term' in weights, "Le support PIMCO n'a pas de pondération définie."
-assert weights['VL_Short_Term'] > 0, "La pondération du support PIMCO est nulle."
 
 # Calcul de la valeur du portefeuille
 def calculate_portfolio_value(df, weights):
@@ -116,7 +108,7 @@ def simulate_monthly_investment(df, monthly_investments):
 monthly_investments = [100, 250, 500, 750]
 simulation_results = simulate_monthly_investment(df_combined, monthly_investments)
 
-# Calculer la performance
+# Calcul de la performance
 def calculate_performance(df, results):
     """
     Calcule la performance du portefeuille pour chaque scénario d'investissement.
@@ -149,6 +141,25 @@ def calculate_performance(df, results):
         "Valeur Finale Après Impôt",
         "Durée de l'Investissement"
     ])
+
+performance_df = calculate_performance(df_combined, simulation_results)
+
+# Affichage du tableau de performance
+print(performance_df)
+
+# Visualisation de la croissance du portefeuille
+plt.figure(figsize=(14, 8))
+for investment, data in simulation_results.items():
+    plt.plot(df_combined['Date'], data['Portfolio'], label=f'{investment}€ par mois')
+    plt.text(df_combined['Date'].iloc[-1], data['Portfolio'][-1], f'{data["Portfolio"][-1]:,.2f}€',
+             color='black', ha='center', va='bottom', fontsize=10)
+
+plt.title("Croissance du portefeuille avec investissement mensuel (avec frais)")
+plt.xlabel("Date")
+plt.ylabel("Valeur du portefeuille (€)")
+plt.legend()
+plt.grid(True)
+plt.show()
 
 performance_df = calculate_performance(df_combined, simulation_results)
 
