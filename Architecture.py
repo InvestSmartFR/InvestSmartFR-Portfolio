@@ -66,10 +66,10 @@ if script_content:
     try:
         exec(script_content, exec_globals)
 
-        # Vérifier la présence de la fonction simulate_portfolio
-        if "simulate_portfolio" in exec_globals:
-            simulate_portfolio = exec_globals["simulate_portfolio"]
-            results, df_combined = simulate_portfolio()
+        # Vérifier la présence de la fonction calculate_portfolio_value
+        if "calculate_portfolio_value" in exec_globals:
+            calculate_portfolio_value = exec_globals["calculate_portfolio_value"]
+            results, df_combined = calculate_portfolio_value()
 
             # Afficher les résultats
             st.header("Résultats de la simulation 📊")
@@ -81,7 +81,7 @@ if script_content:
             # Graphique de la performance
             st.line_chart(data=df_combined.set_index('Date')['Portfolio_Value'])
         else:
-            st.error(f"Le script `{script_name}` ne contient pas de fonction `simulate_portfolio`.")
+            st.error(f"Le script `{script_name}` ne contient pas de fonction `calculate_portfolio_value`.")
     except Exception as e:
         st.error(f"❌ Une erreur est survenue lors de l'exécution du script : {str(e)}")
 else:
