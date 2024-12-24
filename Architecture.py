@@ -75,17 +75,17 @@ script_content = download_script(script_url)
 
 # Base générique pour les supports
 base_supports = {
-    "Euro Gov Bond 7-10 EUR (Acc) Amundi": {"ISIN": "LU1287023185", "File": "Historique VL Euro Gov Bond.xlsx"},
-    "Euro Short-Term High Yield Corp Bond EUR (Acc) PIMCO": {"ISIN": "IE00BD8D5G25", "File": "Euro Short-Term High Yield Corp Bond EUR (Acc) PIMCO.xlsx"},
-    "Euro STOXX 50 EUR (Acc) Xtrackers": {"ISIN": "LU0380865021", "File": "HistoricalData EuroStoxx 50.xlsx"},
-    "MSCI EMU Small Cap EUR (Acc) iShares": {"ISIN": "IE00B3VWMM18", "File": "iShares MSCI EMU Small Cap UCITS ETF.xlsx"},
-    "MSCI Europe Mid Cap Unhedged EUR (Acc) iShares": {"ISIN": "IE00BF20LF40", "File": "MSCI Europe Mid Cap Unhedged EUR (Acc) iShares.xlsx"},
-    "US Treasury Bond 3-7y USD (Acc) Shares": {"ISIN": "IE00B3VWN393", "File": "US Treasury Bond 3-7y USD (Acc) Shares.xlsx"},
-    "S&P SmallCap 600 (Acc) Invesco": {"ISIN": "IE00BH3YZ803", "File": "S&P SmallCap 600 (Acc) Invesco.xlsx"},
-    "Core S&P 500 USD (Acc) iShares": {"ISIN": "IE00B5BMR087", "File": "Core S&P 500 USD (Acc) iShares.xlsx"},
-    "USD Short Duration High Yield Corp Bond USD (Acc) iShares": {"ISIN": "IE00BZ17CN18", "File": "USD Short Duration High Yield Corp Bond USD (Acc) iShares.xlsx"},
-    "Nasdaq-100 EUR (Acc) Amundi": {"ISIN": "LU1829221024", "File": "Nasdaq-100 EUR (Acc) Amundi.xlsx"},
-    "S&P 400 US Mid Cap (Acc) SPDR": {"ISIN": "SPDR", "File": "S&P 400 US Mid Cap (Acc) SPDR.xlsx"}
+    "Euro Gov Bond 7-10 EUR (Acc) Amundi": "LU1287023185",
+    "Euro Short-Term High Yield Corp Bond EUR (Acc) PIMCO": "IE00BD8D5G25",
+    "Euro STOXX 50 EUR (Acc) Xtrackers": "LU0380865021",
+    "MSCI EMU Small Cap EUR (Acc) iShares": "IE00B3VWMM18",
+    "MSCI Europe Mid Cap Unhedged EUR (Acc) iShares": "IE00BF20LF40",
+    "US Treasury Bond 3-7y USD (Acc) Shares": "IE00B3VWN393",
+    "S&P SmallCap 600 (Acc) Invesco": "IE00BH3YZ803",
+    "Core S&P 500 USD (Acc) iShares": "IE00B5BMR087",
+    "USD Short Duration High Yield Corp Bond USD (Acc) iShares": "IE00BZ17CN18",
+    "Nasdaq-100 EUR (Acc) Amundi": "LU1829221024",
+    "S&P 400 US Mid Cap (Acc) SPDR": "SPDR"
 }
 
 if script_content:
@@ -107,8 +107,8 @@ if script_content:
             st.warning("Le script ne contient pas de frais spécifiques. Utilisation des valeurs génériques à 0.0.")
             fees = {support: 0.0 for support in base_supports.keys()}
 
-        # Filtrer les supports avec une pondération > 0
-        filtered_weights = {name: weights.get(name, 0) for name in base_supports.keys() if weights.get(name, 0) > 0}
+        # Filtrer les supports avec pondérations > 0%
+        filtered_weights = {k: v for k, v in weights.items() if v > 0}
 
         # Afficher les pondérations avec sliders
         st.sidebar.header("Pondérations des supports (%)")
@@ -176,9 +176,9 @@ if script_content:
             # Ajouter un tableau pour les supports filtrés
             st.header("Informations sur les supports")
             filtered_support_data = {
-                "Nom": list(filtered_weights.keys()),
-                "ISIN": [base_supports[name]["ISIN"] for name in filtered_weights.keys()],
-                "Frais courants (%)": [fees.get(name, 0) * 100 for name in filtered_weights.keys()]
+                "Nom": [support for support in filtered_weights.keys()],
+                "ISIN": [base_supports[support] for support in filtered_weights.keys()],
+                "Frais courants (%)": [fees.get(support, 0) for support in filtered_weights.keys()]
             }
             filtered_support_df = pd.DataFrame(filtered_support_data)
             st.dataframe(filtered_support_df, use_container_width=True)
@@ -192,3 +192,4 @@ else:
 
 # Message par défaut
 st.sidebar.write("💡 Utilisez les options pour configurer votre portefeuille.")
+
