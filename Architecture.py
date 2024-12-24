@@ -83,7 +83,13 @@ if script_content:
 
         # Vérifier si des pondérations spécifiques sont définies dans le script
         if "weights" in exec_globals:
-            default_weights = {k: v * 100 for k, v in exec_globals["weights"].items()}  # Convertir en pourcentages
+            default_weights = {
+                "Euro Gov Bond 7-10 EUR (Acc) Amundi": exec_globals["weights"].get("VL_Gov_Bond", 0) * 100,
+                "Euro Short-Term High Yield Corp Bond EUR (Acc) PIMCO": exec_globals["weights"].get("VL_PIMCO", 0) * 100,
+                "Euro STOXX 50 EUR (Acc) Xtrackers": exec_globals["weights"].get("VL_Stoxx50", 0) * 100,
+                "MSCI EMU Small Cap EUR (Acc) iShares": exec_globals["weights"].get("VL_Small_Cap", 0) * 100,
+                "MSCI Europe Mid Cap Unhedged EUR (Acc) iShares": exec_globals["weights"].get("VL_Mid_Cap", 0) * 100
+            }
         else:
             st.warning("Le script ne contient pas de pondérations spécifiques. Utilisation des valeurs génériques.")
             default_weights = {
