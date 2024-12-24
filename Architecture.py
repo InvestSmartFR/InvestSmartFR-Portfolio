@@ -61,31 +61,5 @@ def download_script(script_url):
 # Télécharger et exécuter le script Python correspondant
 script_content = download_script(script_url)
 
-if script_content:
-    exec_globals = {}
-    try:
-        exec(script_content, exec_globals)
-
-        # Vérifier la présence de la fonction calculate_portfolio_value
-        if "calculate_portfolio_value" in exec_globals:
-            calculate_portfolio_value = exec_globals["calculate_portfolio_value"]
-            results, df_combined = calculate_portfolio_value()
-
-            # Afficher les résultats
-            st.header("Résultats de la simulation 📊")
-            st.write(f"**Montant total investi :** {results['Montant total investi']}")
-            st.write(f"**Valeur finale :** {results['Valeur finale']}")
-            st.write(f"**Rendement cumulatif :** {results['Rendement cumulatif']}")
-            st.write(f"**Rendement annualisé :** {results['Rendement annualisé']}")
-
-            # Graphique de la performance
-            st.line_chart(data=df_combined.set_index('Date')['Portfolio_Value'])
-        else:
-            st.error(f"Le script `{script_name}` ne contient pas de fonction `calculate_portfolio_value`.")
-    except Exception as e:
-        st.error(f"❌ Une erreur est survenue lors de l'exécution du script : {str(e)}")
-else:
-    st.error("Impossible de récupérer le script sélectionné.")
-
 # Message par défaut
 st.sidebar.write("💡 Utilisez les options pour configurer votre portefeuille.")
