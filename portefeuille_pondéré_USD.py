@@ -2,33 +2,32 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
-# Charger les fichiers Excel
+# Charger les fichiers Excel localement
 files = {
     "US Treasury Bond": "Us Treasury Bond 3-7Y.xlsx",
     "US Short Duration": "Short duration USD Corp.xlsx",
     "S&P 500": "IShares Core SP500.xlsx",
     "Nasdaq": "AMUNDI NASDAQ.xlsx",
     "Small Cap": "S&P SmallCap 600.xlsx",
-    "Mid Cap": "S&P 400 US Mid Cap.xlsx",
 }
 
+# Lecture des fichiers
 df_treasury = pd.read_excel(files["US Treasury Bond"])
 df_short_duration = pd.read_excel(files["US Short Duration"])
 df_sp500 = pd.read_excel(files["S&P 500"])
 df_nasdaq = pd.read_excel(files["Nasdaq"])
 df_small_cap = pd.read_excel(files["Small Cap"])
-df_mid_cap = pd.read_excel(files["Mid Cap"])
 
 # Définir les frais courants pour chaque support
 fees = {
-    "US Treasury Bond": 0.0007,     # 0.07%
-    "US Short Duration": 0.0045,    # 0.45%
-    "S&P 500": 0.0007,              # 0.07%
-    "Nasdaq": 0.0022,               # 0.22%
-    "Small Cap": 0.0014,            # 0.14%
+    "US Treasury Bond": 0.0007,  # 0.07%
+    "US Short Duration": 0.0045,  # 0.45%
+    "S&P 500": 0.0007,  # 0.07%
+    "Nasdaq": 0.0022,  # 0.22%
+    "Small Cap": 0.0014,  # 0.14%
 }
 
-# Prétraitement des fichiers avec les frais inclus
+# Prétraitement des fichiers
 def preprocess_data(df, column_name, start_date, fee_rate):
     """
     Prépare les données : format datetime, trie par date croissante, limite à start_date, applique les frais courants.
@@ -46,8 +45,8 @@ def preprocess_data(df, column_name, start_date, fee_rate):
 # Définir la date de départ
 start_date = pd.to_datetime("2017-10-09")
 
-# Préparer chaque fichier
-df_treasury = preprocess_data(df_treasury, 'VL_Treasury', start_date, fees["US Treasury Bond"])
+# Préparer chaque fichier avec les frais inclus
+df_treasury = preprocess_data(df_treasury, 'VL_Treasury_Bond', start_date, fees["US Treasury Bond"])
 df_short_duration = preprocess_data(df_short_duration, 'VL_Short_Duration', start_date, fees["US Short Duration"])
 df_sp500 = preprocess_data(df_sp500, 'VL_SP500', start_date, fees["S&P 500"])
 df_nasdaq = preprocess_data(df_nasdaq, 'VL_Nasdaq', start_date, fees["Nasdaq"])
@@ -70,11 +69,11 @@ df_combined.iloc[:, 1:] = (
 
 # Définir les pondérations du portefeuille
 weights = {
-    'VL_Treasury': 0.38,         # US Treasury Bond
-    'VL_Short_Duration': 0.12,  # US Short Duration
-    'VL_SP500': 0.20,            # S&P 500
-    'VL_Nasdaq': 0.20,           # Nasdaq
-    'VL_Small_Cap': 0.10,        # Small Cap
+    'VL_Treasury_Bond': 0.38,
+    'VL_Short_Duration': 0.12,
+    'VL_SP500': 0.20,
+    'VL_Nasdaq': 0.20,
+    'VL_Small_Cap': 0.10,
 }
 
 # Calculer la valeur du portefeuille
@@ -102,7 +101,7 @@ def simulate_monthly_investment(df, monthly_investments):
         interests_cumulative = []
         
         for i, row in df.iterrows():
-            if i % 21 == 0 and i != 0:  # Approximation : 21 jours ouvrés par mois
+            if i % 21 == 0 and i != 0:  # Approximativement 21 jours ouvrés par mois
                 total_capital += investment
             capital_cumulative.append(total_capital)
             portfolio_value.append(row['Portfolio_Value'] * (total_capital / 10000))
@@ -120,7 +119,7 @@ def simulate_monthly_investment(df, monthly_investments):
 monthly_investments = [100, 250, 500, 750]
 simulation_results = simulate_monthly_investment(df_combined, monthly_investments)
 
-# Calcul de la performance
+# Calculer la performance
 def calculate_performance(df, results):
     """
     Calcule la performance du portefeuille pour chaque scénario d'investissement.
@@ -156,19 +155,3 @@ def calculate_performance(df, results):
 
 performance_df = calculate_performance(df_combined, simulation_results)
 
-# Affichage du tableau de performance
-print(performance_df)
-
-# Visualisation de la croissance du portefeuille
-plt.figure(figsize=(14, 8))
-for investment, data in simulation_results.items():
-    plt.plot(df_combined['Date'], data['Portfolio'], label=f'{investment}€ par mois')
-    plt.text(df_combined['Date'].iloc[-1], data['Portfolio'][-1], f'{data["Portfolio"][-1]:,.2f}€',
-             color='black', ha='center', va='bottom', fontsize=10)
-
-plt.title("Croissance du portefeuille avec investissement mensuel")
-plt.xlabel("Date")
-plt.ylabel("Valeur du portefeuille (€)")
-plt.legend()
-plt.grid(True)
-plt.show()
