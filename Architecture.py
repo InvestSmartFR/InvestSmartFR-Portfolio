@@ -150,7 +150,7 @@ if script_content:
 
             plt.xlabel("Date")
             plt.ylabel("Valeur du portefeuille (€)")
-            plt.title("Croissance du portefeuille avec investissement mensuel")
+            plt.title(f"Croissance du portefeuille avec un investissement mensuel de {monthly_investment}€")
             plt.legend()
             plt.grid(True)
             st.pyplot(plt)
@@ -160,7 +160,6 @@ if script_content:
             fig, ax = plt.subplots()
             ax.pie(weights.values(), labels=weights.keys(), autopct="%1.1f%%", startangle=90)
             ax.axis('equal')  # Assure que le graphique est un cercle
-            plt.title("Répartition du portefeuille (%)")
             st.pyplot(fig)
 
         else:
