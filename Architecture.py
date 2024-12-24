@@ -80,11 +80,11 @@ if script_content:
     try:
         exec(script_content, exec_globals)
 
-        # Vérifier si des pondérations par défaut existent dans le script
-        if "default_weights" in exec_globals:
-            default_weights = exec_globals["default_weights"]
+        # Vérifier si des pondérations spécifiques sont définies dans le script
+        if "weights" in exec_globals:
+            default_weights = exec_globals["weights"]
         else:
-            st.warning("Le script ne contient pas de pondérations par défaut. Utilisation des valeurs génériques.")
+            st.warning("Le script ne contient pas de pondérations spécifiques. Utilisation des valeurs génériques.")
             default_weights = {
                 'Support 1': 25.0,
                 'Support 2': 25.0,
@@ -138,4 +138,5 @@ else:
 
 # Message par défaut
 st.sidebar.write("💡 Utilisez les options pour configurer votre portefeuille.")
+
 
