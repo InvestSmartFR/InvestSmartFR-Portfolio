@@ -107,32 +107,25 @@ if script_content:
             st.warning("Le script ne contient pas de frais spécifiques. Utilisation des valeurs génériques à 0.0.")
             fees = {support: 0.0 for support in base_supports.keys()}
 
+        # Filtrer les supports avec une pondération > 0
+        filtered_weights = {k: v for k, v in weights.items() if v > 0}
+
         # Afficher les pondérations avec sliders
         st.sidebar.header("Pondérations des supports (%)")
-        for support in weights.keys():
-            weights[support] = st.sidebar.slider(
+        for support in filtered_weights.keys():
+            filtered_weights[support] = st.sidebar.slider(
                 f"{support}",
                 min_value=0.0,
                 max_value=100.0,
-                value=weights.get(support, 0) * 100,
+                value=filtered_weights.get(support, 0) * 100,
                 step=1.0
             )
 
         # Normaliser les pondérations si nécessaire
-        total_weight = sum(weights.values())
+        total_weight = sum(filtered_weights.values())
         if total_weight != 100.0:
             st.sidebar.warning("Les pondérations ne totalisent pas 100%. Elles seront normalisées.")
-            weights = {k: (v / total_weight) * 100 for k, v in weights.items()}
-
-        # Afficher les données des supports
-        st.header("Informations sur les supports")
-        support_data = {
-            "Nom": list(base_supports.keys()),
-            "ISIN": list(base_supports.values()),
-            "Frais courants (%)": [fees.get(support, 0) for support in base_supports.keys()]
-        }
-        support_df = pd.DataFrame(support_data)
-        st.dataframe(support_df, use_container_width=True)
+            filtered_weights = {k: (v / total_weight) * 100 for k, v in filtered_weights.items()}
 
         # Vérifier la présence des fonctions nécessaires pour la simulation
         if "simulate_monthly_investment" in exec_globals and "df_combined" in exec_globals and "calculate_performance" in exec_globals:
@@ -176,9 +169,19 @@ if script_content:
             # Ajouter un graphique en camembert pour la répartition
             st.header("Répartition du portefeuille")
             fig, ax = plt.subplots()
-            ax.pie(weights.values(), labels=weights.keys(), autopct="%1.1f%%", startangle=90)
+            ax.pie(filtered_weights.values(), labels=filtered_weights.keys(), autopct="%1.1f%%", startangle=90)
             ax.axis('equal')  # Assure que le graphique est un cercle
             st.pyplot(fig)
+
+            # Ajouter un tableau pour les supports filtrés
+            st.header("Informations sur les supports")
+            filtered_support_data = {
+                "Nom": [k for k in filtered_weights.keys()],
+                "ISIN": [base_supports[k] for k in filtered_weights.keys()],
+                "Frais courants (%)": [fees.get(k, 0) for k in filtered_weights.keys()]
+            }
+            filtered_support_df = pd.DataFrame(filtered_support_data)
+            st.dataframe(filtered_support_df, use_container_width=True)
 
         else:
             st.error(f"Le script `{script_name}` ne contient pas les fonctions nécessaires ou les données requises.")
