@@ -6,19 +6,19 @@ import matplotlib.pyplot as plt
 files = {
     "Euro Gov Bond": "Historique VL Euro Gov Bond.xlsx",
     "Euro STOXX 50": "HistoricalData EuroStoxx 50.xlsx",
-    "PIMCO Euro Short": "PIMCO Euro Short-Term High Yield Corporate Bond Index UCITS ETF.xlsx"
+    "Euro Short-Term High Yield Corp Bond EUR (Acc) PIMCO": "PIMCO Euro Short-Term High Yield Corporate Bond Index UCITS ETF.xlsx"
 }
 
 # Charger les fichiers Excel dans des DataFrames
 df_gov_bond = pd.read_excel(files["Euro Gov Bond"])
 df_stoxx50 = pd.read_excel(files["Euro STOXX 50"])
-df_pimco = pd.read_excel(files["PIMCO Euro Short"])
+df_pimco = pd.read_excel(files["Euro Short-Term High Yield Corp Bond EUR (Acc) PIMCO"])
 
 # Définir les frais courants pour chaque support
 fees = {
     "Euro Gov Bond": 0.0015,  # 0.15%
     "Euro STOXX 50": 0.0009,  # 0.09%
-    "PIMCO Euro Short": 0.005,  # 0.50%
+    "Euro Short-Term High Yield Corp Bond EUR (Acc) PIMCO": 0.005  # 0.50%
 }
 
 # Prétraitement des fichiers
@@ -42,7 +42,7 @@ start_date = pd.to_datetime("2017-10-09")
 # Préparer chaque fichier
 df_gov_bond = preprocess_data(df_gov_bond, 'VL_Gov_Bond', start_date, fees["Euro Gov Bond"])
 df_stoxx50 = preprocess_data(df_stoxx50, 'VL_Stoxx50', start_date, fees["Euro STOXX 50"])
-df_pimco = preprocess_data(df_pimco, 'VL_PIMCO_Short_Term', start_date, fees["PIMCO Euro Short"])
+df_pimco = preprocess_data(df_pimco, 'VL_PIMCO', start_date, fees["Euro Short-Term High Yield Corp Bond EUR (Acc) PIMCO"])
 
 # Fusionner les données
 dfs = [df_gov_bond, df_stoxx50, df_pimco]
@@ -63,7 +63,7 @@ df_combined.iloc[:, 1:] = (
 weights = {
     'VL_Gov_Bond': 0.50,
     'VL_Stoxx50': 0.30,
-    'VL_PIMCO_Short_Term': 0.20,
+    'VL_PIMCO': 0.20
 }
 
 # Calcul de la valeur totale du portefeuille
@@ -152,5 +152,6 @@ plt.ylabel("Valeur du portefeuille (€)")
 plt.legend()
 plt.grid(True)
 plt.show()
+
 
 
