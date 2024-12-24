@@ -82,7 +82,7 @@ if script_content:
 
         # Vérifier si des pondérations spécifiques sont définies dans le script
         if "weights" in exec_globals:
-            default_weights = exec_globals["weights"]
+            default_weights = {k: v * 100 for k, v in exec_globals["weights"].items()}  # Convertir en pourcentages
         else:
             st.warning("Le script ne contient pas de pondérations spécifiques. Utilisation des valeurs génériques.")
             default_weights = {
@@ -138,5 +138,4 @@ else:
 
 # Message par défaut
 st.sidebar.write("💡 Utilisez les options pour configurer votre portefeuille.")
-
 
