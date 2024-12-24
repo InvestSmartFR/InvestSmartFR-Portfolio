@@ -61,18 +61,11 @@ def load_and_preprocess():
 def simulate_portfolio(df, weights):
     """
     Simule la valeur du portefeuille en fonction des pondérations.
-    
-    Args:
-        df (pd.DataFrame): Données de valeur liquidative des fonds.
-        weights (dict): Pondérations des différents fonds.
-
-    Returns:
-        pd.DataFrame: Données avec une colonne ajoutée pour la valeur totale du portefeuille.
     """
-    # Vérifier que toutes les clés des pondérations sont présentes dans les colonnes du DataFrame
+    # Vérifier les colonnes manquantes
     missing_columns = [col for col in weights.keys() if col not in df.columns]
     if missing_columns:
-        raise ValueError(f"Les colonnes suivantes manquent dans le DataFrame : {missing_columns}")
+        raise ValueError(f"Colonnes manquantes : {missing_columns}")
     
     # Calculer la valeur totale du portefeuille
     df['Portfolio_Value'] = sum(
@@ -153,23 +146,7 @@ def calculate_performance(df, results):
         "Durée de l'Investissement"
     ])
 
-# Charger les données
-st.sidebar.header("Configurer votre simulation")
-df_combined = load_and_preprocess()
-
-# Pondérations et simulation
-default_weights = {
-    'VL_Euro_Gov_Bond': 0.225,
-    'VL_PIMCO_Euro_Short': 0.075,
-    'VL_Euro_STOXX_50': 0.40,
-    'VL_Small_Cap': 0.15,
-    'VL_Mid_Cap': 0.15,
-}
-
-# Correction : Simulation avec arguments fournis
-df_combined = simulate_portfolio(df_combined, default_weights)
-
-# Simulation d'investissements mensuels
+# Simulation des investissements mensuels
 monthly_investments = [100, 250, 500, 750]
 simulation_results = simulate_monthly_investment(df_combined, monthly_investments)
 
