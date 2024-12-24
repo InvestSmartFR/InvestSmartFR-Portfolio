@@ -66,14 +66,27 @@ if script_content:
     try:
         exec(script_content, exec_globals)
 
-        # Vérifier la présence de la fonction principale pour la simulation
-        if "simulate_portfolio_performance" in exec_globals:
-            simulate_portfolio_performance = exec_globals["simulate_portfolio_performance"]
+        # Vérifier la présence de la fonction simulate_monthly_investment
+        if "simulate_monthly_investment" in exec_globals and "df_combined" in exec_globals:
+            simulate_monthly_investment = exec_globals["simulate_monthly_investment"]
+            df_combined = exec_globals["df_combined"]
+            monthly_investments = [100, 250, 500, 750]
 
             # Appeler la fonction de simulation
-            simulate_portfolio_performance()
+            simulation_results = simulate_monthly_investment(df_combined, monthly_investments)
+
+            # Afficher les résultats sous forme de tableau
+            st.header("Résultats de la simulation 📊")
+            for investment, data in simulation_results.items():
+                st.write(f"**Investissement Mensuel : {investment}€**")
+                st.write(f"Valeur Finale : {data['Portfolio'][-1]:,.2f}€")
+
+            # Graphique de la performance
+            st.line_chart({
+                f"{investment}€": data['Portfolio'] for investment, data in simulation_results.items()
+            })
         else:
-            st.error(f"Le script `{script_name}` ne contient pas de fonction `simulate_portfolio_performance` à exécuter.")
+            st.error(f"Le script `{script_name}` ne contient pas les fonctions nécessaires ou les données requises.")
     except Exception as e:
         st.error(f"❌ Une erreur est survenue lors de l'exécution du script : {str(e)}")
 else:
@@ -81,4 +94,3 @@ else:
 
 # Message par défaut
 st.sidebar.write("💡 Utilisez les options pour configurer votre portefeuille.")
-
