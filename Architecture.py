@@ -163,7 +163,9 @@ if script_content:
         filtered_support_data = {
             "Nom": [support for support in filtered_weights.keys()],
             "ISIN": [k for k, v in base_supports.items() if v in weights],
-            "Frais courants (%)": [f"{fees.get(v, 0) * 100:.2f}%" for v in weights.keys() if v in base_supports.values()]
+            "Frais courants (%)": [
+                f"{fees.get(v, 0) * 100:.2f}%" for v in base_supports.values() if v in weights
+            ]
         }
         filtered_support_df = pd.DataFrame(filtered_support_data)
         st.dataframe(filtered_support_df, use_container_width=True)
