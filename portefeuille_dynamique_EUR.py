@@ -1,6 +1,8 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import os
+import streamlit as st
 
 # Charger les fichiers Excel localement
 files = {
@@ -11,20 +13,10 @@ files = {
     "PIMCO Euro Short": "PIMCO Euro Short-Term High Yield Corporate Bond Index UCITS ETF.xlsx",
 }
 
-df_gov_bond = pd.read_excel(files["Euro Gov Bond"])
-df_stoxx50 = pd.read_excel(files["Euro STOXX 50"])
-df_small_cap = pd.read_excel(files["Small Cap"])
-df_mid_cap = pd.read_excel(files["Mid Cap"])
-df_pimco = pd.read_excel(files["PIMCO Euro Short"])
-
-# Définir les frais courants pour chaque support
-fees = {
-    "Euro Gov Bond": 0.0015,  # 0.15%
-    "Euro STOXX 50": 0.0009,  # 0.09%
-    "Small Cap": 0.0058,      # 0.58%
-    "Mid Cap": 0.0015,        # 0.15%
-    "PIMCO Euro Short": 0.005, # 0.50%
-}
+# Vérification des fichiers
+for key, file in files.items():
+    if not os.path.exists(file):
+        raise FileNotFoundError(f"Le fichier '{file}' pour '{key}' est introuvable.")
 
 # Définir les frais courants pour chaque support
 fees = {
@@ -51,16 +43,11 @@ def load_and_preprocess():
     dfs = []
     start_date = pd.to_datetime("2017-10-09")
 
-    for key, url in files.items():
-        response = requests.get(url)
-        if response.status_code == 200:
-            df = pd.read_excel(response.content)
-            column_name = f"VL_{key.replace(' ', '_')}"
-            df = preprocess_data(df, column_name, start_date, fees[key])
-            dfs.append(df)
-        else:
-            st.error(f"Impossible de télécharger le fichier : {key}")
-            return None
+    for key, file in files.items():
+        df = pd.read_excel(file)
+        column_name = f"VL_{key.replace(' ', '_')}"
+        df = preprocess_data(df, column_name, start_date, fees[key])
+        dfs.append(df)
 
     df_combined = dfs[0]
     for df in dfs[1:]:
