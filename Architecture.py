@@ -175,4 +175,4 @@ else:
     st.error("Impossible de récupérer le script sélectionné.")
 
 # Message par défaut
-st.sidebar.write("💡 Utilisez les options pour configurer votre portefeuille."
+st.sidebar.write("💡 Utilisez les options pour configurer votre portefeuille.")
