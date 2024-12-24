@@ -12,7 +12,6 @@ st.title("Simulateur de portefeuilles InvestSmart 🚀")
 # Options pour les portefeuilles et stratégies
 portfolio_options = {
     "100% US": {
-        "Prudent": "portefeuille_prudent.py",
         "Pondéré": "portefeuille_pondéré_USD.py",
         "Dynamique": "portefeuille_dynamique_USD.py"
     },
@@ -22,12 +21,10 @@ portfolio_options = {
         "Dynamique": "portefeuille_dynamique_EUR.py"
     },
     "Mixte": {
-        "Prudent": "portefeuille_prudent.py",
         "Pondéré": "portefeuille_pondéré_MIXTE.py",
         "Dynamique": "portefeuille_dynamique_MIXTE.py"
     },
     "Mixte Asie": {
-        "Prudent": "portefeuille_prudent.py",
         "Pondéré": "portefeuille_pondéré_MIXTE_ASIE.py",
         "Dynamique": "portefeuille_dynamique_MIXTE.py"
     }
@@ -39,9 +36,16 @@ portfolio_type = st.sidebar.selectbox(
     "Type de portefeuille",
     options=list(portfolio_options.keys())
 )
+
+# Adapter les options de stratégie selon le portefeuille sélectionné
+if portfolio_type == "100% Europe":
+    available_strategies = list(portfolio_options[portfolio_type].keys())
+else:
+    available_strategies = [key for key in portfolio_options[portfolio_type].keys() if key != "Prudent"]
+
 strategy = st.sidebar.radio(
     "Profil de risque",
-    options=list(portfolio_options[portfolio_type].keys())
+    options=available_strategies
 )
 
 # Affichage du profil et script correspondant
