@@ -93,13 +93,6 @@ if script_content:
     try:
         exec(script_content, exec_globals)
 
-        # Renommer les colonnes dynamiquement en utilisant les noms complets
-        if "df_combined" in exec_globals:
-            df_combined = exec_globals["df_combined"]
-            for full_name, vl_name in base_supports.items():
-                if vl_name in df_combined.columns:
-                    df_combined.rename(columns={vl_name: full_name}, inplace=True)
-
         # Récupérer les pondérations et frais dynamiques
         weights = exec_globals.get("weights", {})
         fees = exec_globals.get("fees", {})
@@ -116,58 +109,23 @@ if script_content:
                 step=1.0
             )
 
-        # Appeler la fonction de simulation
-        simulation_results = exec_globals["simulate_monthly_investment"](df_combined, [monthly_investment])
-
-        # Calculer les performances
-        performance_df = exec_globals["calculate_performance"](df_combined, simulation_results)
-
-        # Séparer les données en deux tableaux
-        table1 = performance_df[["Investissement Mensuel", "Rendement Annualisé", "Rendement Cumulé", "Valeur Finale"]]
-        table2 = performance_df[["Investissement Mensuel", "Valeur Finale Après Impôt", "Durée de l'Investissement"]]
-
-        # Afficher le premier tableau
-        st.header("Résultats de la simulation 📊")
-        st.subheader("Performance avant impôts")
-        st.dataframe(table1, use_container_width=True)
-
-        # Afficher le deuxième tableau
-        st.subheader("Performance après impôts")
-        st.dataframe(table2, use_container_width=True)
-        st.caption("*Imposition au Prélèvement Forfaitaire Unique")
-
-        # Graphique de la performance personnalisé
-        st.header("Graphique de la croissance du portefeuille")
-        plt.figure(figsize=(10, 6))
-        for investment, data in simulation_results.items():
-            plt.plot(df_combined["Date"], data["Portfolio"], label=f"{investment}€ par mois")
-
-        plt.xlabel("Date")
-        plt.ylabel("Valeur du portefeuille (€)")
-        plt.title(f"Croissance du portefeuille avec un investissement mensuel de {monthly_investment}€")
-        plt.legend()
-        plt.grid(True)
-        st.pyplot(plt)
-
-        # Graphique en camembert pour la répartition
-        st.header("Répartition du portefeuille")
-        fig, ax = plt.subplots()
-        labels = [support for support, weight in filtered_weights.items() if weight > 0]
-        sizes = [weight for weight in filtered_weights.values() if weight > 0]
-        ax.pie(sizes, labels=labels, autopct="%1.1f%%", startangle=90)
-        ax.axis("equal")
-        st.pyplot(fig)
-
-        # Afficher les supports et leurs informations
-        st.header("Informations sur les supports")
+        # Préparer les données pour le tableau
         filtered_support_data = {
-            "Nom": [support for support in filtered_weights.keys()],
-            "ISIN": [k for k, v in base_supports.items() if v in weights],
-            "Frais courants (%)": [
-                f"{fees.get(v, 0) * 100:.2f}%" for v in base_supports.values() if v in weights
-            ]
+            "Nom": [],
+            "ISIN": [],
+            "Frais courants (%)": []
         }
+
+        for full_name, vl_name in base_supports.items():
+            if vl_name in weights and weights[vl_name] > 0:
+                filtered_support_data["Nom"].append(full_name)
+                filtered_support_data["ISIN"].append(next((k for k, v in base_supports.items() if v == vl_name), "N/A"))
+                filtered_support_data["Frais courants (%)"].append(f"{fees.get(vl_name, 0) * 100:.2f}%")
+
         filtered_support_df = pd.DataFrame(filtered_support_data)
+
+        # Afficher les informations sur les supports
+        st.header("Informations sur les supports")
         st.dataframe(filtered_support_df, use_container_width=True)
 
     except Exception as e:
