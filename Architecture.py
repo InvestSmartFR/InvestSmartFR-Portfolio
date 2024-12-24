@@ -101,24 +101,28 @@ if script_content:
     try:
         exec(script_content, exec_globals)
 
-        # Vérifier la présence de la fonction simulate_monthly_investment
-        if "simulate_monthly_investment" in exec_globals and "df_combined" in exec_globals:
+        # Vérifier la présence des fonctions nécessaires
+        if "simulate_monthly_investment" in exec_globals and "df_combined" in exec_globals and "calculate_performance" in exec_globals:
             simulate_monthly_investment = exec_globals["simulate_monthly_investment"]
             df_combined = exec_globals["df_combined"]
+            calculate_performance = exec_globals["calculate_performance"]
 
             # Appeler la fonction de simulation
             simulation_results = simulate_monthly_investment(df_combined, [monthly_investment])
 
+            # Calculer les performances
+            performance_df = calculate_performance(df_combined, simulation_results)
+
             # Afficher les résultats sous forme de tableau
             st.header("Résultats de la simulation 📊")
-            for investment, data in simulation_results.items():
-                st.write(f"**Investissement Mensuel : {investment}€**")
-                st.write(f"Valeur Finale : {data['Portfolio'][-1]:,.2f}€")
+            st.dataframe(performance_df)
 
             # Graphique de la performance
-            st.line_chart({
-                f"{investment}€": data['Portfolio'] for investment, data in simulation_results.items()
-            })
+            plt.figure(figsize=(14, 8))
+            for investment, data in simulation_results.items():
+                st.line_chart({
+                    f"{investment}€": data['Portfolio'] for investment, data in simulation_results.items()
+                })
         else:
             st.error(f"Le script `{script_name}` ne contient pas les fonctions nécessaires ou les données requises.")
     except Exception as e:
