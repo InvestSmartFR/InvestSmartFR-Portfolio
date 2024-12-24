@@ -102,7 +102,7 @@ if script_content:
 
         # Récupérer les pondérations et frais dynamiques
         weights = exec_globals.get("weights", {})
-        fees = exec_globals.get("fees", {})
+        fees = exec_globals.get("fees", {})  # Chargement des frais
 
         # Afficher les pondérations avec sliders
         st.sidebar.header("Pondérations des supports (%)")
@@ -162,8 +162,13 @@ if script_content:
         st.header("Informations sur les supports")
         filtered_support_data = {
             "Nom": [support for support in filtered_weights.keys()],
-            "ISIN": [k for k, v in base_supports.items() if v in weights],
-            "Frais courants (%)": [f"{fees.get(v, 0) * 100:.2f}%" for v in weights.keys() if v in base_supports.values()]
+            "ISIN": [
+                k for k, v in base_supports.items() if v in weights
+            ],
+            "Frais courants (%)": [
+                f"{fees.get(support, 0) * 100:.2f}%"  # Conversion des frais en %
+                for support in filtered_weights.keys()
+            ]
         }
         filtered_support_df = pd.DataFrame(filtered_support_data)
         st.dataframe(filtered_support_df, use_container_width=True)
