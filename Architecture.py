@@ -51,37 +51,37 @@ st.sidebar.write(f"🗂️ Script sélectionné : `{script_name}`")
 # Saisie du montant d'investissement mensuel
 monthly_investment = st.sidebar.number_input(
     "Montant mensuel investi (€)",
-    min_value=10,  # Montant minimal
+    min_value=1,  # Montant minimal
     max_value=10000,  # Montant maximal
     value=100,  # Valeur par défaut
-    step=10
+    step=1
 )
 st.sidebar.markdown(f"**Montant sélectionné :** {monthly_investment}€")
 
 # Configuration des pondérations
-st.sidebar.header("Pondérations des supports")
+st.sidebar.header("Pondérations des supports (%)")
 default_weights = {
-    'VL_Gov_Bond': 0.225,
-    'VL_PIMCO': 0.075,
-    'VL_Stoxx50': 0.40,
-    'VL_Small_Cap': 0.15,
-    'VL_Mid_Cap': 0.15,
+    'VL_Gov_Bond': 22.5,
+    'VL_PIMCO': 7.5,
+    'VL_Stoxx50': 40.0,
+    'VL_Small_Cap': 15.0,
+    'VL_Mid_Cap': 15.0,
 }
 weights = {}
 for support, default_weight in default_weights.items():
     weights[support] = st.sidebar.slider(
         f"{support}",
         min_value=0.0,
-        max_value=1.0,
+        max_value=100.0,
         value=default_weight,
-        step=0.01
+        step=1.0
     )
 
 # Normaliser les pondérations si nécessaire
 total_weight = sum(weights.values())
-if total_weight != 1.0:
+if total_weight != 100.0:
     st.sidebar.warning("Les pondérations ne totalisent pas 100%. Elles seront normalisées.")
-    weights = {k: v / total_weight for k, v in weights.items()}
+    weights = {k: (v / total_weight) * 100 for k, v in weights.items()}
 
 def download_script(script_url):
     """Télécharge le script depuis GitHub."""
