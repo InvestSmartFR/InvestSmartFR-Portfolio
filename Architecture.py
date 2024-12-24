@@ -10,19 +10,24 @@ st.title("Simulateur de portefeuilles InvestSmart 🚀")
 # Options pour les portefeuilles et stratégies
 portfolio_options = {
     "100% US": {
-        "Prudent": "portefeuille_prudent_USD.py",
+        "Prudent": "portefeuille_prudent.py",
         "Pondéré": "portefeuille_pondéré_USD.py",
         "Dynamique": "portefeuille_dynamique_USD.py"
     },
     "100% Europe": {
-        "Prudent": "portefeuille_prudent_EUR.py",
+        "Prudent": "portefeuille_prudent.py",
         "Pondéré": "portefeuille_pondéré_EUR.py",
         "Dynamique": "portefeuille_dynamique_EUR.py"
     },
     "Mixte": {
-        "Prudent": "portefeuille_prudent_MIXTE.py",
+        "Prudent": "portefeuille_prudent.py",
         "Pondéré": "portefeuille_pondéré_MIXTE.py",
         "Dynamique": "portefeuille_dynamique_MIXTE.py"
+    },
+    "Mixte Asie": {
+        "Prudent": "portefeuille_prudent.py",
+        "Pondéré": "portefeuille_pondéré_MIXTE_ASIE.py",
+        "Dynamique": "portefeuille_dynamique_MIXTE.py"  # Utilise le mixte pour dynamique
     }
 }
 
