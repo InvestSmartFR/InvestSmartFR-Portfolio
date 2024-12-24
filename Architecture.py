@@ -1,10 +1,18 @@
-import streamlit as st
+import streamlit as st 
 import requests
 import matplotlib.pyplot as plt
 import pandas as pd
 
 # Base URL GitHub pour accéder aux scripts
 GITHUB_BASE_URL = "https://raw.githubusercontent.com/InvestSmartFR/InvestSmartFR-Portfolio/Portefeuilles/"
+
+# Charger le fichier des frais
+try:
+    fees_df = pd.read_excel("Frais par support.xlsx")
+    fees_mapping = dict(zip(fees_df["Nom"], fees_df["Frais courants (%)"]))
+except Exception as e:
+    st.error(f"❌ Erreur lors du chargement du fichier des frais : {str(e)}")
+    fees_mapping = {}
 
 # Titre de l'application
 st.title("Simulateur de portefeuilles InvestSmart 🚀")
@@ -100,54 +108,9 @@ if script_content:
                 if vl_name in df_combined.columns:
                     df_combined.rename(columns={vl_name: full_name}, inplace=True)
 
-        # Récupérer les pondérations et frais dynamiques
+        # Récupérer les pondérations dynamiques
         weights = exec_globals.get("weights", {})
-        fees = exec_globals.get("fees", {})
-
-        # Afficher les pondérations avec sliders
-        st.sidebar.header("Pondérations des supports (%)")
         filtered_weights = {full_name: weights.get(vl_name, 0) * 100 for full_name, vl_name in base_supports.items() if vl_name in weights and weights[vl_name] > 0}
-        for support, weight in filtered_weights.items():
-            filtered_weights[support] = st.sidebar.slider(
-                f"{support}",
-                min_value=0.0,
-                max_value=100.0,
-                value=weight,
-                step=1.0
-            )
-
-        # Appeler la fonction de simulation
-        simulation_results = exec_globals["simulate_monthly_investment"](df_combined, [monthly_investment])
-
-        # Calculer les performances
-        performance_df = exec_globals["calculate_performance"](df_combined, simulation_results)
-
-        # Séparer les données en deux tableaux
-        table1 = performance_df[["Investissement Mensuel", "Rendement Annualisé", "Rendement Cumulé", "Valeur Finale"]]
-        table2 = performance_df[["Investissement Mensuel", "Valeur Finale Après Impôt", "Durée de l'Investissement"]]
-
-        # Afficher le premier tableau
-        st.header("Résultats de la simulation 📊")
-        st.subheader("Performance avant impôts")
-        st.dataframe(table1, use_container_width=True)
-
-        # Afficher le deuxième tableau
-        st.subheader("Performance après impôts")
-        st.dataframe(table2, use_container_width=True)
-        st.caption("*Imposition au Prélèvement Forfaitaire Unique")
-
-        # Graphique de la performance personnalisé
-        st.header("Graphique de la croissance du portefeuille")
-        plt.figure(figsize=(10, 6))
-        for investment, data in simulation_results.items():
-            plt.plot(df_combined["Date"], data["Portfolio"], label=f"{investment}€ par mois")
-
-        plt.xlabel("Date")
-        plt.ylabel("Valeur du portefeuille (€)")
-        plt.title(f"Croissance du portefeuille avec un investissement mensuel de {monthly_investment}€")
-        plt.legend()
-        plt.grid(True)
-        st.pyplot(plt)
 
         # Graphique en camembert pour la répartition
         st.header("Répartition du portefeuille")
@@ -164,7 +127,7 @@ if script_content:
             "Nom": [support for support in filtered_weights.keys()],
             "ISIN": [k for k, v in base_supports.items() if v in weights],
             "Frais courants (%)": [
-                f"{fees.get(v, 0) * 100:.2f}%" for v in base_supports.values() if v in weights
+                f"{fees_mapping.get(support, 'N/A')}" for support in filtered_weights.keys()
             ]
         }
         filtered_support_df = pd.DataFrame(filtered_support_data)
