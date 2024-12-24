@@ -9,6 +9,7 @@ files = {
     "PIMCO Euro Short": "PIMCO Euro Short-Term High Yield Corporate Bond Index UCITS ETF.xlsx",
 }
 
+# Lire les fichiers Excel
 df_gov_bond = pd.read_excel(files["Euro Gov Bond"])
 df_stoxx50 = pd.read_excel(files["Euro STOXX 50"])
 df_pimco = pd.read_excel(files["PIMCO Euro Short"])
@@ -65,7 +66,7 @@ weights = {
     'VL_Short_Term': 0.20,
 }
 
-# Calcul de la valeur du portefeuille
+# Calculer la valeur du portefeuille
 def calculate_portfolio_value(df, weights):
     """
     Calcule la valeur totale du portefeuille en pondérant les VL par leurs poids.
