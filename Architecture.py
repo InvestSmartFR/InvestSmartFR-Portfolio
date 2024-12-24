@@ -69,14 +69,24 @@ if script_content:
         # Vérifier la présence de la fonction calculate_portfolio_value
         if "calculate_portfolio_value" in exec_globals:
             calculate_portfolio_value = exec_globals["calculate_portfolio_value"]
-            results, df_combined = calculate_portfolio_value()
+
+            # Définir les pondérations du portefeuille
+            weights = {
+                'VL_Gov_Bond': 0.225,
+                'VL_PIMCO': 0.075,  # Correspond à PIMCO Euro Short-Term
+                'VL_Stoxx50': 0.40,
+                'VL_Small_Cap': 0.15,
+                'VL_Mid_Cap': 0.15,
+            }
+
+            # Calculer les résultats
+            df_combined = exec_globals["df_combined"]
+            df_combined['Portfolio_Value'] = calculate_portfolio_value(df_combined, weights)
 
             # Afficher les résultats
             st.header("Résultats de la simulation 📊")
-            st.write(f"**Montant total investi :** {results['Montant total investi']}")
-            st.write(f"**Valeur finale :** {results['Valeur finale']}")
-            st.write(f"**Rendement cumulatif :** {results['Rendement cumulatif']}")
-            st.write(f"**Rendement annualisé :** {results['Rendement annualisé']}")
+            st.write(f"**Montant total investi :** {10000}")
+            st.write(f"**Valeur finale :** {df_combined['Portfolio_Value'].iloc[-1]:,.2f}€")
 
             # Graphique de la performance
             st.line_chart(data=df_combined.set_index('Date')['Portfolio_Value'])
@@ -89,3 +99,4 @@ else:
 
 # Message par défaut
 st.sidebar.write("💡 Utilisez les options pour configurer votre portefeuille.")
+
