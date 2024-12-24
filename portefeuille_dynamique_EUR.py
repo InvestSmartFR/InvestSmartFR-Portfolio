@@ -3,6 +3,15 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
+# Charger les fichiers d'investissement (remplacez par vos propres fichiers)
+files = {
+    "Euro Gov Bond": "euro_gov_bond.xlsx",
+    "Euro STOXX 50": "euro_stoxx50.xlsx",
+    "Small Cap": "small_cap.xlsx",
+    "Mid Cap": "mid_cap.xlsx",
+    "PIMCO Euro Short": "pimco_euro_short.xlsx",
+}
+
 # Définir les frais courants pour chaque support
 fees = {
     "Euro Gov Bond": 0.0015,  # 0.15%
@@ -109,15 +118,6 @@ def calculate_performance(df, results):
 st.sidebar.header("Configurer votre simulation")
 df_combined = load_and_preprocess()
 
-# Charger les fichiers d'investissement (remplacez par vos propres fichiers)
-files = {
-    "Euro Gov Bond": "euro_gov_bond.xlsx",
-    "Euro STOXX 50": "euro_stoxx50.xlsx",
-    "Small Cap": "small_cap.xlsx",
-    "Mid Cap": "mid_cap.xlsx",
-    "PIMCO Euro Short": "pimco_euro_short.xlsx",
-}
-
 # Pondérations et simulation
 default_weights = {
     'VL_Euro_Gov_Bond': 0.225,
@@ -152,4 +152,3 @@ def plot_growth(df, results):
     st.pyplot(plt)
 
 plot_growth(df_combined, simulation_results)
-
