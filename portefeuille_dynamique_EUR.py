@@ -1,7 +1,6 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-import streamlit as st
 
 # Charger les fichiers Excel localement
 files = {
@@ -155,16 +154,19 @@ def calculate_performance(df, results):
 
 performance_df = calculate_performance(df_combined, simulation_results)
 
-def main():
-    """
-    Fonction principale pour exécuter la simulation et afficher les résultats.
-    """
-    st.write("Simulation des performances du portefeuille 📊")
-    st.dataframe(performance_df)
+# Affichage du tableau de performance
+print(performance_df)
 
-    # Graphique de la performance
-    st.line_chart(data=df_combined.set_index('Date')['Portfolio_Value'])
+# Visualisation de la croissance du portefeuille
+plt.figure(figsize=(14, 8))
+for investment, data in simulation_results.items():
+    plt.plot(df_combined['Date'], data['Portfolio'], label=f'{investment}€ par mois')
+    plt.text(df_combined['Date'].iloc[-1], data['Portfolio'][-1], f'{data["Portfolio"][-1]:,.2f}€',
+             color='black', ha='center', va='bottom', fontsize=10)
 
-# Appeler la fonction principale si ce script est exécuté directement
-if __name__ == "__main__":
-    main()
+plt.title("Croissance du portefeuille avec investissement mensuel (avec frais)")
+plt.xlabel("Date")
+plt.ylabel("Valeur du portefeuille (€)")
+plt.legend()
+plt.grid(True)
+plt.show()
